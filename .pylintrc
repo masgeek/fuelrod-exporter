@@ -1,0 +1,43 @@
+[MASTER]
+# Ignore migrations, virtual environments, and tests folders
+ignore=migrations,venv,tests
+ignore-patterns=__init__.py,models.py,model-gen.py
+
+# Load plugins if needed
+load-plugins=pylint.extensions.docparams
+
+# Maximum number of jobs for parallel checking
+jobs=1
+
+[MESSAGES CONTROL]
+# Disable these messages that are common in Flask/SQLAlchemy projects
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    R0903,  # too-few-public-methods (common for models)
+    R0902,  # too-many-instance-attributes
+    W0511,  # TODO comments
+    R0801,  # duplicate-code (sometimes SQLAlchemy models look similar)
+    C0103,  # variable name doesn't conform to snake_case (SQLAlchemy fields)
+    W0613,  # unused-argument (common in Flask view functions)
+    R0913,  # too-many-arguments (Flask route functions)
+    R0914   # too-many-locals (complex views or queries)
+
+[REPORTS]
+# Disable the full report at the end
+reports=no
+
+[FORMAT]
+# Maximum line length (PEP8 standard is 79 or 88; set to 120 for modern code)
+max-line-length=120
+indent-string='    '
+
+[BASIC]
+# Allow common variable names in Flask/SQLAlchemy projects
+good-names=i,j,k,ex,Run,_,db,id
+
+[TYPECHECK]
+# Ignore missing attributes in SQLAlchemy models
+ignored-classes=SQLAlchemy,BaseModel
+ignored-modules=flask_sqlalchemy,sqlalchemy
