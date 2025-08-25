@@ -190,7 +190,7 @@ def validate_environment() -> dict:
 
     config = {
         "db_url": db_url,
-        "outfile_path": Path(os.getenv("OUTFILE_PATH", "src/fuelrod_exporter/models.py")),
+        "outfile_path": Path(os.getenv("OUTFILE_PATH", "src/fuelrod_exporter/models/fuelrod.py")),
         "excluded_tables": excluded_patterns,
         "included_views": parse_comma_separated_env("INCLUDED_VIEWS"),
         "generator": os.getenv("GENERATOR", "declarative"),
