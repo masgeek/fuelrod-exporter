@@ -4,13 +4,13 @@ Simple test runner for generated ORM models using db.py.
 
 from sqlalchemy import text
 from fuelrod_exporter.db import get_session, engine, DB_SCHEMA
-from fuelrod_exporter.models import SmsOutbox
+from fuelrod_exporter.models.fuelrod import SmsOutbox
 
 
 def test_connection():
     """Verify database connection and active schema."""
     with engine.connect() as conn:
-        # Ensure schema is set explicitly
+        # Ensure the schema is set explicitly
         conn.execute(text(f"SET search_path TO {DB_SCHEMA}"))
         result = conn.execute(text("SELECT current_schema()")).scalar_one()
         print(f"Connected. Current schema: {result}")
@@ -28,7 +28,10 @@ def test_query():
         session.close()
 
 
-if __name__ == "__main__":
+def main():
     test_connection()
-    # Uncomment to test query against SmsOutbox
-    # test_query()
+    test_query()
+
+
+if __name__ == "__main__":
+    main()

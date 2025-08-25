@@ -5,7 +5,7 @@ from flask_openapi3 import Tag, APIBlueprint
 
 from fuelrod_exporter.config import API_PREFIX, API_VERSION
 from fuelrod_exporter.dto.crop_data_resp import CropDataRecord, CropRecordResponse, Unauthorized
-from fuelrod_exporter.dto.data_filters import PlantingDataFilter
+from fuelrod_exporter.dto.data_filters import ReportFilter
 from fuelrod_exporter.repo.crop_data import CropDataRepo
 from fuelrod_exporter.utils.logging import SharedLogger
 
@@ -26,7 +26,7 @@ planting_data_repo = CropDataRepo()
 
 @api.get('/',
          responses={200: CropRecordResponse, 401: Unauthorized})
-def get_data(query: PlantingDataFilter):
+def get_data(query: ReportFilter):
     page = int(request.args.get('page', default=1, type=int))
     per_page = int(request.args.get('per_page', default=50, type=int))
 
