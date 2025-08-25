@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy import create_engine, MetaData, inspect
 from sqlalchemy.exc import SQLAlchemyError
+from fuelrod_exporter.models.view_mapper import ViewClassWriter
 
 # Load environment variables from .env file
 load_dotenv()
@@ -348,6 +349,160 @@ def prepend_header_to_file(filepath: Path, header: str = BASE_HEADER) -> None:
         raise ORMGeneratorError(f"Failed to prepend header to {filepath}: {e}") from e
 
 
+def enhance_view_models_for_completion(filepath: Path, db_url: str, view_names: List[str],
+                                       schema: Optional[str] = None) -> None:
+    """
+    Enhance view models to be more table-like for better code completion.
+
+    This function modifies view models by:
+    1. Adding __table_args__ with primary_key constraints where appropriate
+    2. Adding type hints and column metadata
+    3. Making views appear more like tables to IDEs
+    """
+    if not view_names or not filepath.exists():
+        return
+
+    try:
+        # Read the current file content
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Get view column information from database
+        engine = create_engine(db_url)
+        inspector = inspect(engine)
+
+        enhanced_content = content
+
+        for view_name in view_names:
+            try:
+                # Get column information for this view
+                columns = inspector.get_columns(view_name, schema=schema)
+
+                if not columns:
+                    continue
+
+                # Find the class definition for this view
+                class_name = _to_class_name(view_name)
+                class_pattern = f"class {class_name}\\(Base\\):"
+
+                if class_pattern not in enhanced_content:
+                    # Try with different naming conventions
+                    alt_class_name = view_name.replace('_', '').title()
+                    class_pattern = f"class {alt_class_name}\\(Base\\):"
+                    if class_pattern not in enhanced_content:
+                        logger.warning(f"Could not find class definition for view {view_name}")
+                        continue
+                    class_name = alt_class_name
+
+                # Determine potential primary key columns
+                pk_candidates = _identify_primary_key_candidates(columns, view_name)
+
+                # Create table args for better IDE support
+                table_args_lines = []
+
+                if pk_candidates:
+                    # Add primary key constraint
+                    pk_constraint = f"PrimaryKeyConstraint({', '.join([repr(col) for col in pk_candidates])}, name='pk_{view_name}')"
+                    table_args_lines.append(f"        {pk_constraint},")
+
+                # Add table args if we have any
+                if table_args_lines:
+                    table_args_import = "from sqlalchemy import PrimaryKeyConstraint, Index"
+                    if table_args_import not in enhanced_content:
+                        # Add imports after the base imports
+                        import_insertion_point = enhanced_content.find("from sqlalchemy import")
+                        if import_insertion_point != -1:
+                            # Find the end of the existing import
+                            import_end = enhanced_content.find("\n", import_insertion_point)
+                            enhanced_content = (enhanced_content[:import_end] +
+                                                f"\n{table_args_import}" +
+                                                enhanced_content[import_end:])
+
+                    table_args_block = "    __table_args__ = (\n" + "".join(table_args_lines) + "    )\n"
+
+                    # Insert table args after the __tablename__ declaration
+                    tablename_pattern = f"    __tablename__ = '{view_name}'"
+                    tablename_pos = enhanced_content.find(tablename_pattern)
+
+                    if tablename_pos != -1:
+                        # Find the end of the line
+                        line_end = enhanced_content.find('\n', tablename_pos)
+                        if line_end != -1:
+                            enhanced_content = (enhanced_content[:line_end + 1] +
+                                                f"\n{table_args_block}" +
+                                                enhanced_content[line_end + 1:])
+
+                # Add helpful class-level documentation
+                class_doc = f'    """View model for {view_name} - Enhanced for IDE completion"""'
+                class_pos = enhanced_content.find(f"class {class_name}(Base):")
+                if class_pos != -1:
+                    line_end = enhanced_content.find('\n', class_pos)
+                    if line_end != -1:
+                        enhanced_content = (enhanced_content[:line_end + 1] +
+                                            f"    {class_doc}\n" +
+                                            enhanced_content[line_end + 1:])
+
+            except Exception as e:
+                logger.warning(f"Failed to enhance view {view_name}: {e}")
+                continue
+
+        # Write the enhanced content back
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(enhanced_content)
+
+        logger.info(f"Enhanced {len(view_names)} view models for better code completion")
+
+    except Exception as e:
+        logger.warning(f"Failed to enhance view models: {e}")
+
+
+def _to_class_name(table_name: str) -> str:
+    """Convert table name to class name using SQLAlchemy naming conventions."""
+    # Split on underscores and capitalize each part
+    parts = table_name.split('_')
+    return ''.join(word.capitalize() for word in parts)
+
+
+def _identify_primary_key_candidates(columns: List[dict], view_name: str) -> List[str]:
+    """
+    Identify potential primary key candidates for a view.
+
+    Looks for columns that are likely to be unique identifiers:
+    - Columns named 'id', 'uuid', or ending with '_id'
+    - Columns with 'primary' or 'key' in the name
+    - Non-nullable columns that seem like identifiers
+    """
+    pk_candidates = []
+
+    for column in columns:
+        col_name = column['name'].lower()
+        col_type = str(column['type']).lower()
+        nullable = column.get('nullable', True)
+
+        # Primary candidates
+        if (col_name in ['id', 'uuid', 'pk'] or
+                col_name.endswith('_id') or
+                col_name.endswith('_uuid') or
+                'primary' in col_name or
+                'key' in col_name):
+            pk_candidates.append(column['name'])
+            continue
+
+        # Secondary candidates (non-nullable unique-looking columns)
+        if (not nullable and
+                ('int' in col_type or 'uuid' in col_type or 'char' in col_type) and
+                len(pk_candidates) == 0):  # Only if we haven't found obvious candidates
+            pk_candidates.append(column['name'])
+
+    # Fallback: if no obvious candidates, use the first few non-nullable columns
+    if not pk_candidates:
+        non_nullable = [col['name'] for col in columns if not col.get('nullable', True)]
+        pk_candidates = non_nullable[:2]  # Use first 2 non-nullable columns
+
+    # Limit to reasonable number of PK columns
+    return pk_candidates[:3]
+
+
 def generate_init_file(models_dir: Path, table_file: str, view_file: str = None) -> None:
     """Generate __init__.py file to export all models."""
     init_path = models_dir / "__init__.py"
@@ -408,7 +563,7 @@ def run_sqlacodegen() -> None:
 
         # Generate tables file
         if included_tables:
-            logger.info(f"Generating table models for {len(included_tables)} tables: {included_tables}")
+            logger.debug(f"Generating table models for {len(included_tables)} tables: {included_tables}")
 
             # Create dummy file first
             create_dummy_file(config["outfile_path"], BASE_HEADER)
@@ -418,6 +573,7 @@ def run_sqlacodegen() -> None:
 
             # Prepend header to generated file
             prepend_header_to_file(config["outfile_path"], BASE_HEADER)
+
 
             logger.success(f"Table models generated successfully at {config['outfile_path']}")
         else:
@@ -435,6 +591,7 @@ def run_sqlacodegen() -> None:
 
             # Prepend header to generated file
             prepend_header_to_file(config["view_outfile_path"], VIEW_HEADER)
+            ViewClassWriter.rewrite_file(config["view_outfile_path"],config["view_outfile_path"])
 
             logger.success(f"View models generated successfully at {config['view_outfile_path']}")
         else:
@@ -449,8 +606,8 @@ def run_sqlacodegen() -> None:
             table_file = config["outfile_path"].name if included_tables else None
             view_file = config["view_outfile_path"].name if included_views else None
 
-            if table_file:  # Only generate init if we have at least tables
-                generate_init_file(models_dir, table_file, view_file)
+            # if table_file:  # Only generate init if we have at least tables
+            #     generate_init_file(models_dir, table_file, view_file)
 
         logger.success("ORM model generation completed successfully!")
 
