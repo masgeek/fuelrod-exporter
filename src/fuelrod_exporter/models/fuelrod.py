@@ -8,12 +8,7 @@ import os
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import MetaData
 
-def make_base(schema: str):
-    metadata = MetaData(schema=schema)
-    return declarative_base(metadata=metadata)
 
-DB_SCHEMA = os.getenv("DB_SCHEMA", "public")
-Base = make_base(DB_SCHEMA)
 
 from typing import Optional
 import datetime
@@ -23,8 +18,15 @@ from sqlalchemy import BigInteger, Boolean, Column, Computed, Date, DateTime, Fo
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-class Base(DeclarativeBase):
-    pass
+def make_base(schema: str):
+    metadata = MetaData(schema=schema)
+    return declarative_base(metadata=metadata)
+
+DB_SCHEMA = os.getenv("DB_SCHEMA", "public")
+Base = make_base(DB_SCHEMA)
+
+# class Base(DeclarativeBase):
+#     pass
 
 
 class ApiAccounts(Base):
