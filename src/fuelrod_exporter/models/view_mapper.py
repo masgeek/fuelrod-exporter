@@ -55,7 +55,7 @@ class ViewClassWriter:
 
     @staticmethod
     def _make_class_name(table_name: str) -> str:
-        raw_name = table_name
+        raw_name:str = table_name
 
         # strip "vw_" or "vw" prefix (case-insensitive)
         if raw_name.lower().startswith("vw_"):
@@ -63,7 +63,7 @@ class ViewClassWriter:
         elif raw_name.lower().startswith("vw"):
             raw_name = raw_name[2:]
 
-        parts = raw_name.split("_")
+        parts: list[str] = raw_name.split("_")
 
         # singularize the last part if plural
         if parts:
@@ -74,6 +74,7 @@ class ViewClassWriter:
         # build class name
         return "".join([part.capitalize() for part in parts])
 
+    # noinspection PyTypeChecker
     @staticmethod
     def generate_class_code(base_name: str, table: Table) -> str:
         raw_name: str = table.name
