@@ -9,7 +9,7 @@ from sqlalchemy import String, Text, BigInteger, Boolean, Numeric, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 Base = declarative_base()
-class VwSmsReports(Base):
+class SmsReport(Base):
     __tablename__ = 'vw_sms_reports'
 
     id: Mapped[int] = mapped_column(BigInteger())

@@ -6,10 +6,9 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Query
 
-from fuelrod_exporter.dto.crop_data_resp import CropDataRecord
 from fuelrod_exporter.dto.data_filters import CampaignReportFilter
 from fuelrod_exporter.models.database_conn import MyDb
-from fuelrod_exporter.models.fuelrod_views import VwSmsReports
+from fuelrod_exporter.models.fuelrod_views import SmsReport
 from fuelrod_exporter.utils.logging import SharedLogger
 
 shared_logger = SharedLogger(level=logging.DEBUG)
@@ -28,15 +27,15 @@ class CropDataRepo:
 
         session = self._get_session()
 
-        query = session.query(VwSmsReports)
+        query = session.query(SmsReport)
 
         if filters.api_account_id:
-            query = query.filter(VwSmsReports.api_account_id == filters.api_account_id)
+            query = query.filter(SmsReport.api_account_id == filters.api_account_id)
         if filters.campaign_id:
             # Perform a partial search for a province
-            query = query.filter(VwSmsReports.campaign_id.ilike(f"%{filters.campaign_id}%"))
+            query = query.filter(SmsReport.campaign_id.ilike(f"%{filters.campaign_id}%"))
 
-        query = query.order_by(VwSmsReports.id)
+        query = query.order_by(SmsReport.id)
         return query
 
     def get_paginated_data(self, filters: CampaignReportFilter, page: int, per_page: int) -> QueryPagination:
@@ -44,7 +43,7 @@ class CropDataRepo:
 
         return query.paginate(page=page, per_page=per_page, error_out=False)
 
-    def update(self, crop_data: VwSmsReports) -> VwSmsReports:
+    def update(self, crop_data: SmsReport) -> SmsReport:
         session = self._get_session()
         try:
             session.commit()

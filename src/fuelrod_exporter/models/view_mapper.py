@@ -1,10 +1,16 @@
 import os
 from pathlib import Path
+from typing import Iterator, List, Iterable, Any
+
 from sqlalchemy import (
     Table, Column, MetaData, BigInteger, Boolean, Numeric, String, Text, Sequence
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
+import inflect
+from sqlalchemy.sql.base import ReadOnlyColumnCollection
+
+p = inflect.engine()
 
 
 class ViewClassWriter:
@@ -48,18 +54,44 @@ class ViewClassWriter:
         return "Any"
 
     @staticmethod
-    def generate_class_code(base_name: str, table: Table) -> str:
-        """ Generate ORM class code from a Table definition using Mapped[] + mapped_column(). """
-        class_name = "".join([part.capitalize() for part in table.name.split("_")])
-        lines = []
-        lines.append(f"class {class_name}({base_name}):")
-        lines.append(f"    __tablename__ = '{table.name}'")
-        lines.append("")
+    def _make_class_name(table_name: str) -> str:
+        raw_name = table_name
 
-        for col in table.columns:
-            py_type = ViewClassWriter._python_type(col)
-            args = [repr(col.type)]
-            kwargs = []
+        # strip "vw_" or "vw" prefix (case-insensitive)
+        if raw_name.lower().startswith("vw_"):
+            raw_name = raw_name[3:]
+        elif raw_name.lower().startswith("vw"):
+            raw_name = raw_name[2:]
+
+        parts = raw_name.split("_")
+
+        # singularize the last part if plural
+        if parts:
+            singular = p.singular_noun(parts[-1])
+            if singular:
+                parts[-1] = singular
+
+        # build class name
+        return "".join([part.capitalize() for part in parts])
+
+    @staticmethod
+    def generate_class_code(base_name: str, table: Table) -> str:
+        raw_name: str = table.name
+        class_name: str = ViewClassWriter._make_class_name(table_name=raw_name)
+
+        lines: List[str] = [
+            f"class {class_name}({base_name}):",
+            f"    __tablename__ = '{table.name}'",
+            ""
+        ]
+
+        columns: ReadOnlyColumnCollection[str, Column[Any]] = table.columns  # ✅ precise
+
+        for col in columns:  # type: Column
+            py_type: str = ViewClassWriter._python_type(col)
+
+            args: List[str] = [repr(col.type)]
+            kwargs: List[str] = []
 
             if col.primary_key:
                 kwargs.append("primary_key=True")
@@ -68,7 +100,7 @@ class ViewClassWriter:
             if col.default is not None:
                 kwargs.append(f"server_default={repr(col.default.arg)}")
 
-            args_str = ", ".join(args + kwargs)
+            args_str: str = ", ".join(args + kwargs)
             lines.append(
                 f"    {col.name}: Mapped[{py_type}] = mapped_column({args_str})"
             )
@@ -100,7 +132,7 @@ Base = declarative_base()
 
 if __name__ == "__main__":
     # Example usage
-    input_path = "app/models/generated_views.py"   # <- sqlacodegen output file
-    output_path = "app/models/view_entities.py"    # <- rewritten ORM classes
+    input_path = "app/models/generated_views.py"  # <- sqlacodegen output file
+    output_path = "app/models/view_entities.py"  # <- rewritten ORM classes
     ViewClassWriter.rewrite_file(input_path, output_path)
     print(f"Rewritten classes saved to {output_path}")
