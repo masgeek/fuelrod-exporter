@@ -50,7 +50,7 @@ def init_db(app):
 def register_apis(app: OpenAPI):
     """Register all API Blueprints with the Flask app."""
     from fuelrod_exporter.api.user import api as user_api
-    from fuelrod_exporter.api.campaign_report import api as report_api
+    from fuelrod_exporter.api.sms_reports import api as report_api
 
     app.register_api(user_api)
     app.register_api(report_api)

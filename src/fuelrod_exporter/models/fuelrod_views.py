@@ -12,7 +12,7 @@ Base = declarative_base()
 class SmsReport(Base):
     __tablename__ = 'vw_sms_reports'
 
-    id: Mapped[int] = mapped_column(BigInteger())
+    id: Mapped[int] = mapped_column(BigInteger(), primary_key=True)
     api_account_id: Mapped[int] = mapped_column(BigInteger())
     message_id: Mapped[str] = mapped_column(String(length=255))
     campaign_id: Mapped[int] = mapped_column(BigInteger())

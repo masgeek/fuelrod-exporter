@@ -246,6 +246,12 @@ files = [
 
 [package.dependencies]
 flask = ">=2.0"
+flask-openapi3-elements = {version = "*", optional = true, markers = "extra == \"elements\""}
+flask-openapi3-rapidoc = {version = "*", optional = true, markers = "extra == \"rapidoc\""}
+flask-openapi3-rapipdf = {version = "*", optional = true, markers = "extra == \"rapipdf\""}
+flask-openapi3-redoc = {version = "*", optional = true, markers = "extra == \"redoc\""}
+flask-openapi3-scalar = {version = "*", optional = true, markers = "extra == \"scalar\""}
+flask-openapi3-swagger = {version = "*", optional = true, markers = "extra == \"swagger\""}
 pydantic = ">=2.4"
 
 [package.extras]
@@ -259,6 +265,96 @@ redoc = ["flask-openapi3-redoc"]
 scalar = ["flask-openapi3-scalar"]
 swagger = ["flask-openapi3-swagger"]
 yaml = ["pyyaml"]
+
+[[package]]
+name = "flask-openapi3-elements"
+version = "9.0.6"
+description = "Provide Stoplight Elements UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_elements-9.0.6-py3-none-any.whl", hash = "sha256:1dab60be067ed5ad694bdc615c42c9823f8e53173bf19e63f02dd4ec6dcbd778"},
+    {file = "flask_openapi3_elements-9.0.6.tar.gz", hash = "sha256:6000e09d046e4a1963a3ee8cc3e09444b8fd212b3f2216b8bd4bb0fbc2e5297d"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
+
+[[package]]
+name = "flask-openapi3-rapidoc"
+version = "9.3.8"
+description = "Provide RapiDoc UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_rapidoc-9.3.8-py3-none-any.whl", hash = "sha256:3785ccaeff56c8644f03d8be7a5ba1d9a2bfa9237f55b38703ff332742403fea"},
+    {file = "flask_openapi3_rapidoc-9.3.8.tar.gz", hash = "sha256:f298d2f5cb1019c4f394f0b358cade68084555c1499c03abec7cd50b6127459d"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
+
+[[package]]
+name = "flask-openapi3-rapipdf"
+version = "2.2.1"
+description = "Provide RapiPDF UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_rapipdf-2.2.1-py3-none-any.whl", hash = "sha256:3439f3b0138908a75a3ab963a27325fb16957355be2b1ab0010a62ffa2f9eb36"},
+    {file = "flask_openapi3_rapipdf-2.2.1.tar.gz", hash = "sha256:87d3be483581f3a92d1bdd175b2227987a26929f45a7ba1e0aa7131a842a31b0"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
+
+[[package]]
+name = "flask-openapi3-redoc"
+version = "2.5.0"
+description = "Provide Redoc UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_redoc-2.5.0-py3-none-any.whl", hash = "sha256:eb838cfc5365e7d135d0e4c53591a8570c8abe76197c9d9cfe130e7c17e64219"},
+    {file = "flask_openapi3_redoc-2.5.0.tar.gz", hash = "sha256:57a56eafc8ef6abfc4b05743cb5eb0dcf0ca4ae8d644c089e516ddcec7acd9e0"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
+
+[[package]]
+name = "flask-openapi3-scalar"
+version = "1.34.6"
+description = "Provide Scalar UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_scalar-1.34.6-py3-none-any.whl", hash = "sha256:513dcc917398d106ca9f254a91fdbe8340baca8c460a425b00128a240ce28d0f"},
+    {file = "flask_openapi3_scalar-1.34.6.tar.gz", hash = "sha256:d655d0540fa8e1aef4fa5bedec1a374ac9dace056f35ec4e335067ec5b897f58"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
+
+[[package]]
+name = "flask-openapi3-swagger"
+version = "5.27.1"
+description = "Provide Swagger UI for flask-openapi3."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "flask_openapi3_swagger-5.27.1-py3-none-any.whl", hash = "sha256:5ec90bcb03dc4cb844cccc53badbf89e6cd8ddeceab0a7c55ab8c00a6dd5038d"},
+    {file = "flask_openapi3_swagger-5.27.1.tar.gz", hash = "sha256:7f200f9d7bdd07975bf17a8d84e84a69cf36cb13eb2b29eb3802b8321da5ca50"},
+]
+
+[package.dependencies]
+flask-openapi3 = "*"
 
 [[package]]
 name = "flask-sqlalchemy"
@@ -1515,4 +1611,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "8c84c9d8e80a8d7e5a2f2e71b88201c077f091daec6b946dba31614c5e304646"
+content-hash = "43604cb3ef11a5c7f2ca4c4e275938831ab5b5a76dd9c82f273e700f72ef3a16"

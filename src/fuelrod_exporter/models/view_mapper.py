@@ -79,7 +79,7 @@ class ViewClassWriter:
     def generate_class_code(base_name: str, table: Table) -> str:
         raw_name: str = table.name
         class_name: str = ViewClassWriter._make_class_name(table_name=raw_name)
-
+        has_pk = bool(table.primary_key.columns)
         lines: List[str] = [
             f"class {class_name}({base_name}):",
             f"    __tablename__ = '{table.name}'",
@@ -94,8 +94,10 @@ class ViewClassWriter:
             args: List[str] = [repr(col.type)]
             kwargs: List[str] = []
 
-            if col.primary_key:
+            is_pk = col.primary_key or (not has_pk and col.name == "id")
+            if is_pk:
                 kwargs.append("primary_key=True")
+
             if not col.nullable:
                 kwargs.append("nullable=False")
             if col.default is not None:

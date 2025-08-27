@@ -1,7 +1,7 @@
 from flask import jsonify
 from flask_openapi3 import Tag, APIBlueprint
 
-from app.config import API_PREFIX, API_VERSION
+from fuelrod_exporter.config import API_PREFIX, API_VERSION
 
 __version__ = "/v1"
 __bp__ = "/users"
