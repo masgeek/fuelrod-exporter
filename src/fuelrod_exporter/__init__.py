@@ -4,14 +4,13 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
-from fuelrod_exporter.core.database_conn import MyDb
-from fuelrod_exporter.api.v1.main import register_app_routes
-from . import config
+from fuelrod_exporter.core.database import MyDb
+from fuelrod_exporter.api.v1.routes import register_app_routes
+from fuelrod_exporter.api.v1.controllers.report_controller import ReportsController
+from fuelrod_exporter.config import Config
 
 # Load environment variables from .env file
 load_dotenv()
-
-port = os.getenv('SERVER_PORT', default=3000)
 
 # API contact information
 contact = Contact(
@@ -28,16 +27,16 @@ api_license = License(
 
 # API information
 info = Info(
-    title=config.APP_NAME,
-    version=config.APP_VERSION,
+    title=Config.APP_NAME,
+    version=Config.APP_VERSION,
     contact=contact,
     license=api_license,
-    termsOfService="https://munywele.co.ke/terms-of-service"
+    termsOfService=Config.TERMS_OF_SERVICE_URL
 )
 
 # API servers
 servers = [
-    Server(url=f"http://127.0.0.1:{port}"),
+    Server(url=f"http://127.0.0.1:{Config.SERVER_PORT}"),
     Server(url=os.getenv("SERVER_URL_PROD", "https://export.munywele.co.ke")),
 ]
 
@@ -49,11 +48,10 @@ def init_db(app):
 
 def register_apis(app: OpenAPI):
     """Register all API Blueprints with the Flask app."""
-    from fuelrod_exporter.api.v1.controllers.user_controller import api as user_api
-    from fuelrod_exporter.api.v1.controllers.report_controller import api as report_api
+    reports_controller = ReportsController()
 
-    app.register_api(user_api)
-    app.register_api(report_api)
+    # app.register_api(user_api)
+    app.register_api(reports_controller.api)
 
 
 def create_app():
@@ -72,9 +70,9 @@ def create_app():
     CORS(app)
 
     # Configure the database URI
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DB_URL")
-    app.config['SQLALCHEMY_ECHO'] = os.getenv('DEBUG_DB') == '1'
-    app.json.sort_keys = os.getenv('SORT_JSON') == '1'
+    app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
+    app.config['SQLALCHEMY_ECHO'] = Config.DEBUG_DB
+    app.json.sort_keys = Config.SORT_JSON
 
     # Initialize the database
     init_db(app)

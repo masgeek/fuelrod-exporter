@@ -23,7 +23,7 @@ class ReportRepo:
         self.db = MyDb.get_db()
         return self.db.session
 
-    def get_filtered_data(self, filters: ReportFilter) -> Query:
+    def build_filtered_query(self, filters: ReportFilter) -> Query:
         session = self._get_session()
         query = session.query(SmsReport)
         conditions = [
@@ -48,8 +48,3 @@ class ReportRepo:
             query = query.order_by(order_fn(column))
 
         return query
-
-    def get_paginated_data(self, filters: ReportFilter, page: int, per_page: int) -> QueryPagination:
-        query = self.get_filtered_data(filters)
-
-        return query.paginate(page=page, per_page=per_page, error_out=False)
