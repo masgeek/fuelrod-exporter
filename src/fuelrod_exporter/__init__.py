@@ -71,6 +71,7 @@ def create_app():
 
     # Register APIs and other routes
     for bp in v1_blueprints:
-        app.register_blueprint(bp)
+        print(bp)
+        app.register_api(bp)
 
     return app
