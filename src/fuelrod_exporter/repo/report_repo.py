@@ -6,10 +6,10 @@ from sqlalchemy import desc, asc
 from sqlalchemy.orm import Query
 
 from fuelrod_exporter.models.common import SortOrder
-from fuelrod_exporter.models.database_conn import MyDb
+from fuelrod_exporter.core.database import MyDb
 from fuelrod_exporter.models.fuelrod_views import SmsReport
-from fuelrod_exporter.models.report_filter import ReportFilter
-from fuelrod_exporter.utils.logging import SharedLogger
+from fuelrod_exporter.schemas.report_filter import ReportFilter
+from fuelrod_exporter.core.logging import SharedLogger
 
 shared_logger = SharedLogger(level=logging.DEBUG)
 

@@ -6,8 +6,8 @@ from typing import Optional
 from dateutil.relativedelta import relativedelta
 from pydantic import Field, field_validator, model_validator, ConfigDict, conlist
 
-from .common import ReportFilterBase
-from fuelrod_exporter.dto.validators import (
+from fuelrod_exporter.models.common import ReportFilterBase
+from fuelrod_exporter.schemas.validators import (
     validate_api_account_id,
     validate_campaign_id,
     validate_sort_by,

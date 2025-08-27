@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
-from fuelrod_exporter.models.database_conn import MyDb
-from fuelrod_exporter.routes.main import register_app_routes
+from fuelrod_exporter.core.database_conn import MyDb
+from fuelrod_exporter.api.v1.main import register_app_routes
 from . import config
 
 # Load environment variables from .env file
@@ -49,8 +49,8 @@ def init_db(app):
 
 def register_apis(app: OpenAPI):
     """Register all API Blueprints with the Flask app."""
-    from fuelrod_exporter.api.user import api as user_api
-    from fuelrod_exporter.api.sms_reports import api as report_api
+    from fuelrod_exporter.api.v1.controllers.user_controller import api as user_api
+    from fuelrod_exporter.api.v1.controllers.report_controller import api as report_api
 
     app.register_api(user_api)
     app.register_api(report_api)

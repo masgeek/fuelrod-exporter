@@ -1,12 +1,12 @@
 from flask import jsonify
 from flask_openapi3 import Tag, APIBlueprint
 
-from fuelrod_exporter.config import API_PREFIX, API_VERSION
+from fuelrod_exporter.config import API_PREFIX
 
 __version__ = "/v1"
 __bp__ = "/users"
 
-url_prefix = API_PREFIX + API_VERSION + __bp__
+url_prefix = API_PREFIX + __version__ + __bp__
 
 # Define any security requirements or tags if needed
 tag = Tag(name='User', description="User management API")

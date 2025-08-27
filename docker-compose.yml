@@ -1,0 +1,12 @@
+services:
+  kvuno:
+    container_name: kvuno
+    hostname: kvuno
+    image: masgeek/kvuno-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app

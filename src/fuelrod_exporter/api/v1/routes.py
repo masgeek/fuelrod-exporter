@@ -1,6 +1,6 @@
 from flask import redirect, jsonify
 
-from fuelrod_exporter.models.database_conn import MyDb
+from fuelrod_exporter.core.database import MyDb
 
 
 def register_app_routes(app):

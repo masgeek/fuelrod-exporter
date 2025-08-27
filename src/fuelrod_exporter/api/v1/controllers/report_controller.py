@@ -2,18 +2,17 @@ import logging
 
 from flask import request, jsonify
 from flask_openapi3 import Tag, APIBlueprint
-from pydantic import ValidationError
 
-from fuelrod_exporter.api import parse_model
-from fuelrod_exporter.config import API_PREFIX, API_VERSION
-from fuelrod_exporter.dto.report_resp import ReportResponse, ReportDataRecord, Unauthorized, Pagination
-from fuelrod_exporter.models.report_filter import ReportFilter
+from fuelrod_exporter.config import API_PREFIX
+from fuelrod_exporter.schemas.report_resp import ReportResponse, ReportDataRecord, Unauthorized, Pagination
+from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.repo.reports_repo import ReportRepo
-from fuelrod_exporter.utils.logging import SharedLogger
+from fuelrod_exporter.core.logging import SharedLogger
 
 __bp__ = "/reports/campaign"
+__version__ = "/v1"
 
-url_prefix = API_PREFIX + API_VERSION + __bp__
+url_prefix = API_PREFIX + __version__ + __bp__
 
 # Define any security requirements or tags if needed
 tag = Tag(name="fuelrod", description="Campaign reports")
