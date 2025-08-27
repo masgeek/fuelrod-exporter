@@ -1,12 +1,18 @@
 from datetime import date
+from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict, field_validator
+
+
+class SortOrder(str, Enum):
+    asc = "asc"
+    desc = "desc"
 
 
 # noinspection PyNestedDecorators
 class DateRange(BaseModel):
     start: date = Field(..., description="Inclusive start date (YYYY-MM-DD)")
-    end: date   = Field(..., description="Inclusive end date (YYYY-MM-DD)")
+    end: date = Field(..., description="Inclusive end date (YYYY-MM-DD)")
 
     model_config = ConfigDict(
         extra="forbid",
@@ -30,4 +36,4 @@ class ReportFilterBase(BaseModel):
         None, description="Object with `start` and `end` dates"
     )
     sort_by: Optional[str] = Field(None, description="Column to sort by")
-    sort_order: Optional[str] = Field("asc", description="Sort order: 'asc' or 'desc'")
+    sort_order: Optional[SortOrder] = Field(SortOrder.asc, description="Sort order: 'asc' or 'desc'")

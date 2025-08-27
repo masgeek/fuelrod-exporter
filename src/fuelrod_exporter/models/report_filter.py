@@ -1,5 +1,6 @@
 from calendar import monthrange
 from datetime import datetime, date
+from enum import Enum
 from typing import Optional
 
 from dateutil.relativedelta import relativedelta
@@ -20,7 +21,6 @@ last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
 
 
 class ReportFilter(ReportFilterBase):
-    opt_date: Optional[datetime] = Field(None, description="Optional date (YYYY-MM-DD)")
     campaign_id: Optional[conlist(item_type=int)] = Field(
         None, description="One or more campaign IDs", min_length=1, max_length=50
     )
@@ -35,6 +35,8 @@ class ReportFilter(ReportFilterBase):
                 "api_account_id": 6,
                 "campaign_id": [20200811071956, 20200811071955],
                 "date_range": {"start": first_day.isoformat(), "end": last_day.isoformat()},
+                "sort_by": "created_at",
+                "sort_order": "desc"
             }
         },
     )

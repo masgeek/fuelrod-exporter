@@ -24,7 +24,7 @@ class ReportRepo:
 
     def get_filtered_data(self, filters: ReportFilter) -> Query:
         session = self._get_session()
-
+        query = session.query(SmsReport)
         conditions = [
             SmsReport.api_account_id == filters.api_account_id
         ]
@@ -40,11 +40,12 @@ class ReportRepo:
                 SmsReport.created_at <= end_dt
             ])
 
-        query = session.query(SmsReport)
         query = query.filter(*conditions)
-        sort_field = getattr(SmsReport, filters.sort_by or "id")
-        sort_order = asc if filters.sort_order == "asc" else desc
-        query = query.order_by(sort_order(sort_field))
+        if filters.sort_by:
+            column = getattr(SmsReport, filters.sort_by)
+            order_fn = desc if filters.sort_order == filters.sort_order.desc else asc
+            query = query.order_by(order_fn(column))
+
         return query
 
     def get_paginated_data(self, filters: ReportFilter, page: int, per_page: int) -> QueryPagination:
