@@ -39,8 +39,6 @@ class ReportsController:
 
             try:
                 paginated = self.service.get_paginated_reports(filters=body, page=page, per_page=per_page)
-
-                # Example: If `paginated` is already a Pydantic model
                 return jsonify(paginated.model_dump(mode="json")), 200
 
             except Exception as e:

@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
 from fuelrod_exporter.core.database import MyDb
-from fuelrod_exporter.api.v1.routes import register_app_routes
+from fuelrod_exporter.api.v1.routes import v1_blueprints
 from fuelrod_exporter.api.v1.controllers.report_controller import ReportsController
 from fuelrod_exporter.config import Config
 
@@ -46,14 +46,6 @@ def init_db(app):
     MyDb.init_app(app)
 
 
-def register_apis(app: OpenAPI):
-    """Register all API Blueprints with the Flask app."""
-    reports_controller = ReportsController()
-
-    # app.register_api(user_api)
-    app.register_api(reports_controller.api)
-
-
 def create_app():
     """Create and configure the Flask app."""
     app = OpenAPI(
@@ -78,7 +70,7 @@ def create_app():
     init_db(app)
 
     # Register APIs and other routes
-    register_apis(app)
-    register_app_routes(app)
+    for bp in v1_blueprints:
+        app.register_blueprint(bp)
 
     return app

@@ -13,6 +13,7 @@ class Config:
 
     APP_NAME = os.getenv("APP_NAME", "Fuelrod Exporter")
     SERVER_PORT = os.getenv("SERVER_PORT", 3000)
+    SERVER_URL_PROD = os.getenv("SERVER_URL_PROD", "https://export.munywele.co.ke")
     APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
     API_PREFIX = os.getenv("API_PREFIX", "/api")
     TERMS_OF_SERVICE_URL = os.getenv("TERMS_OF_SERVICE_URL", "https://munywele.co.ke/terms-of-service")
