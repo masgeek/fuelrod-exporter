@@ -5,6 +5,7 @@ from flask_sqlalchemy.pagination import QueryPagination
 from sqlalchemy import desc, asc
 from sqlalchemy.orm import Query
 
+from fuelrod_exporter.models.common import SortOrder
 from fuelrod_exporter.models.database_conn import MyDb
 from fuelrod_exporter.models.fuelrod_views import SmsReport
 from fuelrod_exporter.models.report_filter import ReportFilter
@@ -43,7 +44,7 @@ class ReportRepo:
         query = query.filter(*conditions)
         if filters.sort_by:
             column = getattr(SmsReport, filters.sort_by)
-            order_fn = desc if filters.sort_order == filters.sort_order.desc else asc
+            order_fn = desc if filters.sort_order == SortOrder.desc else asc
             query = query.order_by(order_fn(column))
 
         return query

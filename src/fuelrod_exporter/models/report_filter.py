@@ -9,10 +9,8 @@ from pydantic import Field, field_validator, model_validator, ConfigDict, conlis
 from .common import ReportFilterBase
 from fuelrod_exporter.dto.validators import (
     validate_api_account_id,
-    validate_opt_date,
     validate_campaign_id,
     validate_sort_by,
-    validate_sort_order,
 )
 
 today = date.today()
@@ -43,10 +41,8 @@ class ReportFilter(ReportFilterBase):
 
     # Plug in validators
     _validate_api_account_id = field_validator("api_account_id", mode="before")(validate_api_account_id)
-    _validate_opt_date = field_validator("opt_date", mode="before")(validate_opt_date)
     _validate_campaign_id = field_validator("campaign_id", mode="before")(validate_campaign_id)
     _validate_sort_by = field_validator("sort_by", mode="before")(validate_sort_by)
-    _validate_sort_order = field_validator("sort_order", mode="before")(validate_sort_order)
 
     @model_validator(mode="after")
     def cross_field_validation(self):

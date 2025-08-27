@@ -24,34 +24,6 @@ def validate_api_account_id(value) -> int:
     return value
 
 
-def validate_opt_date(value: Optional[str]) -> Optional[str]:
-    """Validate optional date format (YYYY-MM-DD)"""
-    if not value:
-        return None
-
-    if isinstance(value, str) and not value.strip():
-        return None
-
-    value = value.strip() if isinstance(value, str) else str(value)
-
-    pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-    if not pattern.match(value):
-        raise ValueError("Date must be in 'YYYY-MM-DD' format")
-
-    try:
-        parsed_date = datetime.strptime(value, "%Y-%m-%d")
-    except ValueError:
-        raise ValueError("Invalid date provided")
-
-    if parsed_date > datetime.now():
-        raise ValueError("Date cannot be in the future")
-
-    if parsed_date < datetime(2000, 1, 1):
-        raise ValueError("Date must be after 2000-01-01")
-
-    return value
-
-
 def validate_campaign_id(value) -> Optional[List[int]]:
     """Validate and normalize campaign IDs"""
     if not value:
@@ -81,11 +53,3 @@ def validate_sort_by(value: Optional[str]) -> Optional[str]:
     if value not in allowed:
         raise ValueError(f"sort_by must be one of: {', '.join(sorted(allowed))}")
     return value
-
-
-def validate_sort_order(value: Optional[str]) -> str:
-    if not value:
-        return "asc"
-    if value.lower() not in {"asc", "desc"}:
-        raise ValueError("sort_order must be 'asc' or 'desc'")
-    return value.lower()

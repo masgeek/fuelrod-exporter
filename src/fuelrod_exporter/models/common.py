@@ -14,12 +14,7 @@ class DateRange(BaseModel):
     start: date = Field(..., description="Inclusive start date (YYYY-MM-DD)")
     end: date = Field(..., description="Inclusive end date (YYYY-MM-DD)")
 
-    model_config = ConfigDict(
-        extra="forbid",
-        json_schema_extra={
-            "example": {"start": "2023-07-01", "end": "2023-07-31"}
-        }
-    )
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("end")
     @classmethod
