@@ -17,3 +17,7 @@ class Config:
     APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
     API_PREFIX = os.getenv("API_PREFIX", "/api")
     TERMS_OF_SERVICE_URL = os.getenv("TERMS_OF_SERVICE_URL", "https://munywele.co.ke/terms-of-service")
+
+    SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
+    EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
+    API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{SERVER_PORT}")
