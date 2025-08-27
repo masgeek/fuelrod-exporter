@@ -49,7 +49,3 @@ class ReportFilter(ReportFilterBase):
         if self.campaign_id and len(self.campaign_id) > 50:
             raise ValueError("Maximum 50 campaign IDs allowed per request")
         return self
-
-    def __str__(self):
-        campaign_count = len(self.campaign_id) if self.campaign_id else 0
-        return f"ReportFilter(account_id={self.api_account_id}, date={self.opt_date}, campaigns={campaign_count})"

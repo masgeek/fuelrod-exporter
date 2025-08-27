@@ -9,6 +9,11 @@ class SortOrder(str, Enum):
     desc = "desc"
 
 
+class PaginationQuery(BaseModel):
+    page: int = Field(1, description="Page number (default 1)", )
+    per_page: int = Field(50, description="Items per page (default 50)")
+
+
 # noinspection PyNestedDecorators
 class DateRange(BaseModel):
     start: date = Field(..., description="Inclusive start date (YYYY-MM-DD)")

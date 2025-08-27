@@ -3,6 +3,7 @@ from flask import request, jsonify
 from flask_openapi3 import Tag, APIBlueprint
 
 from fuelrod_exporter.config import Config
+from fuelrod_exporter.models.common import PaginationQuery
 from fuelrod_exporter.schemas.report_resp import (
     ReportResponse,
     Unauthorized,
@@ -21,7 +22,7 @@ class ReportsController:
         url_prefix = Config.API_PREFIX + self.__version__ + self.__bp__
 
         # Setup tags & blueprint
-        tag = Tag(name="fuelrod", description="Campaign reports")
+        tag = Tag(name="reports", description="Campaign reports")
         self.api = APIBlueprint(
             self.__bp__, __name__, url_prefix=url_prefix, abp_tags=[tag]
         )
@@ -33,12 +34,10 @@ class ReportsController:
 
     def _register_routes(self):
         @self.api.post("/", responses={200: ReportResponse, 401: Unauthorized})
-        def list_reports(body: ReportFilter):
-            page = request.args.get("page", default=1, type=int)
-            per_page = request.args.get("per_page", default=50, type=int)
-
+        def list_reports(body: ReportFilter, query: PaginationQuery):
+            self.logger.debug(f"Request per_page: {query}")
             try:
-                paginated = self.service.get_paginated_reports(filters=body, page=page, per_page=per_page)
+                paginated = self.service.get_paginated_reports(filters=body, page=query.page, per_page=query.per_page)
                 return jsonify(paginated.model_dump(mode="json")), 200
 
             except Exception as e:
