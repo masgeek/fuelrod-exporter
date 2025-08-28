@@ -2,15 +2,12 @@ import os
 
 from dotenv import load_dotenv
 from flask_cors import CORS
-from flask_dramatiq import Dramatiq
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
-from fuelrod_exporter.core.database import MyDb
 from fuelrod_exporter.api.v1.routes import v1_blueprints
 from fuelrod_exporter.config import Config
-
-import dramatiq
-from dramatiq.brokers.redis import RedisBroker
+from fuelrod_exporter.core.database import MyDb
+from flask_dramatiq import Dramatiq
 
 # Load environment variables from .env file
 load_dotenv()
@@ -69,21 +66,23 @@ def create_app():
     app.config['SQLALCHEMY_ECHO'] = Config.DEBUG_DB
     app.json.sort_keys = Config.SORT_JSON
 
-    app.config["DRAMATIQ_BROKER"] = {
-        "BROKER": "dramatiq.brokers.redis.RedisBroker",
-        "OPTIONS": {
-            "url": f"redis://:{Config.BROKER_PASS}@{Config.BROKER_HOST}:{Config.BROKER_PORT}/{Config.BROKER_DB}"
-        },
-    }
-    app.config["DRAMATIQ_TASKS"] = [
-        "fuelrod_exporter.tasks",  # module with your dramatiq tasks
-    ]
 
     # Initialize database
     init_db(app)
 
-    # Initialize Dramatiq
-    Dramatiq(app)
+
+    app.config["DRAMATIQ_BROKER"] = "dramatiq.brokers.redis.RedisBroker"
+    app.config["DRAMATIQ_BROKER_URL"] = {
+        "url": f"redis://:{Config.BROKER_PASS}@{Config.BROKER_HOST}:{Config.BROKER_PORT}/{Config.BROKER_DB}"
+    }
+    app.config["DRAMATIQ_TASKS"] = [
+        "fuelrod_exporter.tasks"
+    ]
+
+    dramatiq_ext = Dramatiq()
+    dramatiq_ext.init_app(app)
+    print(app.extensions)
+
 
     # Register APIs and other routes
     for bp in v1_blueprints:

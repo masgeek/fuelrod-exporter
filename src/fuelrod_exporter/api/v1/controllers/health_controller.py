@@ -5,7 +5,6 @@ from flask_openapi3 import APIBlueprint, Tag
 from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.database import MyDb
 from fuelrod_exporter.core.logging import SharedLogger
-from fuelrod_exporter.core.celery import my_celery as celery
 from fuelrod_exporter.tasks.system_tasks import (
     health_check_task,
     test_database_task,
@@ -39,11 +38,11 @@ class HealthController:
                 "status": "healthy",
                 "components": {
                     "database": "unknown",
-                    "celery": "unknown",
+                    "dramatiq": "unknown",
                 },
             }
 
-            # Check DB
+            # ✅ Database check
             try:
                 db_connected = MyDb.check_db_connection()
                 status["components"]["database"] = "UP" if db_connected else "DOWN"
@@ -54,75 +53,63 @@ class HealthController:
                 status["components"]["database"] = f"ERROR: {str(e)}"
                 status["status"] = "degraded"
 
-            # Check Celery (using DB test task)
+            # ✅ Dramatiq check (submit a test job)
             try:
-                result = test_database_task.delay()
-                result_value = result.get(timeout=30)
+                future = test_database_task.send()
+                result_value = future.get_result(block=True, timeout=30)
 
                 if result_value.get("status") == "success":
-                    status["components"]["celery"] = "UP"
+                    status["components"]["dramatiq"] = "UP"
                 else:
-                    status["components"]["celery"] = "DOWN"
+                    status["components"]["dramatiq"] = "DOWN"
                     status["status"] = "degraded"
             except Exception as e:
-                self.logger.error(f"Celery health check failed: {str(e)}")
-                status["components"]["celery"] = f"ERROR: {str(e)}"
+                self.logger.error(f"Dramatiq health check failed: {str(e)}")
+                status["components"]["dramatiq"] = f"ERROR: {str(e)}"
                 status["status"] = "degraded"
 
             code = 200 if status["status"] == "healthy" else 500
             return jsonify(status), code
 
-        @self.api.get("/celery", summary="Celery detailed health check")
-        def celery_health_check():
+        @self.api.get("/dramatiq", summary="Dramatiq detailed health check")
+        def dramatiq_health_check():
             status = {
                 "status": "healthy",
-                "celery": {
-                    "workers": "unknown",
+                "dramatiq": {
+                    "workers": "N/A",   # dramatiq doesn’t expose active worker inspection like Celery
                     "broker": "unknown",
                     "task_test": "unknown",
                 },
             }
 
-            # Check Celery workers
+            # ✅ Check broker (Ping via test task)
             try:
-                inspect = celery.control.inspect()
-                active_workers = inspect.active()
+                future = health_check_task.send()
+                result_value = future.get_result(block=True, timeout=10)
 
-                if active_workers:
-                    worker_count = len(active_workers)
-                    status["celery"]["workers"] = f"UP ({worker_count} workers active)"
+                if result_value.get("status") == "ok":
+                    status["dramatiq"]["broker"] = "UP"
                 else:
-                    status["celery"]["workers"] = "DOWN (no active workers)"
+                    status["dramatiq"]["broker"] = "DOWN"
                     status["status"] = "degraded"
             except Exception as e:
-                self.logger.error(f"Celery workers check failed: {str(e)}")
-                status["celery"]["workers"] = f"ERROR: {str(e)}"
+                self.logger.error(f"Dramatiq broker check failed: {str(e)}")
+                status["dramatiq"]["broker"] = f"ERROR: {str(e)}"
                 status["status"] = "degraded"
 
-            # Check Celery broker
+            # ✅ Test Dramatiq task execution
             try:
-                connection = celery.connection()
-                connection.connect()
-                connection.release()
-                status["celery"]["broker"] = "UP"
-            except Exception as e:
-                self.logger.error(f"Celery broker check failed: {str(e)}")
-                status["celery"]["broker"] = f"ERROR: {str(e)}"
-                status["status"] = "degraded"
-
-            # Test Celery task execution (using test_database_task)
-            try:
-                result = test_database_task.delay()
-                result_value = result.get(timeout=10)
+                future = test_database_task.send()
+                result_value = future.get_result(block=True, timeout=10)
 
                 if result_value.get("status") == "success":
-                    status["celery"]["task_test"] = "UP"
+                    status["dramatiq"]["task_test"] = "UP"
                 else:
-                    status["celery"]["task_test"] = "DOWN"
+                    status["dramatiq"]["task_test"] = "DOWN"
                     status["status"] = "degraded"
             except Exception as e:
-                self.logger.error(f"Celery task test failed: {str(e)}")
-                status["celery"]["task_test"] = f"ERROR: {str(e)}"
+                self.logger.error(f"Dramatiq task test failed: {str(e)}")
+                status["dramatiq"]["task_test"] = f"ERROR: {str(e)}"
                 status["status"] = "degraded"
 
             code = 200 if status["status"] == "healthy" else 500
@@ -138,7 +125,7 @@ class HealthController:
                 },
             }
 
-            # Check database connection
+            # ✅ Connection check
             try:
                 db_connected = MyDb.check_db_connection()
                 status["database"]["connection"] = "UP" if db_connected else "DOWN"
@@ -149,13 +136,11 @@ class HealthController:
                 status["database"]["connection"] = f"ERROR: {str(e)}"
                 status["status"] = "degraded"
 
-            # Test database query
+            # ✅ Query test
             try:
                 result = MyDb.check_db_execution()
-                if result:
-                    status["database"]["query_test"] = "UP"
-                else:
-                    status["database"]["query_test"] = "DOWN"
+                status["database"]["query_test"] = "UP" if result else "DOWN"
+                if not result:
                     status["status"] = "degraded"
             except Exception as e:
                 self.logger.error(f"Database query test failed: {str(e)}")

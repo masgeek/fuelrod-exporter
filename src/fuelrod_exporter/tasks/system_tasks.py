@@ -1,7 +1,6 @@
 import datetime
 import time
-# import dramatiq
-from fuelrod_exporter.core.broker import redis_broker as dramatiq
+import dramatiq
 from fuelrod_exporter.core.database import MyDb
 
 
