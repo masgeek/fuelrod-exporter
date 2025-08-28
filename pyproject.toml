@@ -22,8 +22,8 @@ dependencies = [
     "openpyxl (>=3.1.5,<4.0.0)",
     "postgres (>=4.0,<5.0)",
     "colorama (>=0.4.6,<0.5.0)",
-    "flask-dramatiq (>=0.6.0,<0.7.0)",
     "redis (>=6.4.0,<7.0.0)",
+    "dramatiq[redis] (>=1.18.0,<2.0.0)",
 ]
 
 [tool.poetry]

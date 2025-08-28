@@ -1,23 +1,21 @@
-import os
-from dotenv import load_dotenv
 import dramatiq
 from dramatiq.brokers.redis import RedisBroker
 from dramatiq.results import Results
 from dramatiq.results.backends.redis import RedisBackend
+from dramatiq.middleware import Middleware
+from fuelrod_exporter.config import Config
 
-# Load env vars
-load_dotenv()
+result_backend = RedisBackend(url=Config.RESULT_BACKEND)
 
-# Create Redis-backed result store
-result_backend = RedisBackend(url=f"redis://:{os.getenv('BROKER_PASS')}@{os.getenv('BROKER_HOST')}:{os.getenv('BROKER_PORT')}/1")
 
-# Create broker
-broker = RedisBroker(
-    url=f"redis://:{os.getenv('BROKER_PASS')}@{os.getenv('BROKER_HOST')}:{os.getenv('BROKER_PORT')}/{os.getenv('BROKER_DB')}"
-)
+class NoHeartbeatMiddleware(Middleware):
+    def after_process_message(self, broker, message, *, result=None, exception=None):
+        pass
 
-# Add Results middleware
+
+broker = RedisBroker(url=Config.BROKER_URL)
+
+broker.add_middleware(NoHeartbeatMiddleware())
 broker.add_middleware(Results(backend=result_backend))
 
-# Register broker globally
 dramatiq.set_broker(broker)

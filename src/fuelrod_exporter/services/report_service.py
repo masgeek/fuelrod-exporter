@@ -9,6 +9,7 @@ from flask import current_app
 
 from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.repo.report_repo import ReportRepo
+from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.schemas.report_resp import ReportDataRecord, Pagination, ReportResponse
 from fuelrod_exporter.config import Config
 
@@ -74,3 +75,27 @@ class ReportService:
     def get_all_reports(self, filters):
         q = self.repo.build_filtered_query(filters)
         return q.all()
+
+    def generate_excel_task(self, filters: ReportFilter, filename: str):
+
+        orm_items = self.get_all_reports(filters)
+        dto_records = self._map_to_records(orm_items)
+
+        server_tz = pytz.timezone(Config.SERVER_TZ)
+        serialized = []
+        for r in dto_records:
+            rec = {}
+            for k, v in r.model_dump().items():
+                if hasattr(v, "tzinfo") and v.tzinfo is not None:
+                    v = v.astimezone(server_tz).replace(tzinfo=None)
+                    rec[k] = v.isoformat(sep=" ")
+                elif isinstance(v, datetime):
+                    rec[k] = v.isoformat(sep=" ")
+                else:
+                    rec[k] = v
+            serialized.append(rec)
+
+        df = pd.DataFrame(serialized)
+        os.makedirs(Config.EXPORT_FOLDER, exist_ok=True)
+        file_path = os.path.join(Config.EXPORT_FOLDER, filename)
+        df.to_excel(file_path, index=False)

@@ -12,8 +12,9 @@ from fuelrod_exporter.schemas.report_resp import (
 )
 from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.core.logging import SharedLogger
+from fuelrod_exporter.schemas.serilizer import serialize_dates
 from fuelrod_exporter.services.report_service import ReportService
-from fuelrod_exporter.tasks.export_tasks import generate_excel_task
+from fuelrod_exporter.tasks.exporter import generate_excel_task
 
 
 class ReportsController:
@@ -62,7 +63,11 @@ class ReportsController:
                 download_url = f"{Config.API_BASE_URL}/downloads/{filename}"
 
                 # Queue the task
-                generate_excel_task.delay(body.model_dump(), filename)
+                payload = serialize_dates(body.model_dump())
+                self.logger.debug(
+                    f"Queuing export task for {payload} with filename {filename}"
+                )
+                generate_excel_task.send(payload, filename)
 
                 return {"download_url": download_url}
             except Exception as e:

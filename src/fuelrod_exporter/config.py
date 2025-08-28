@@ -31,7 +31,7 @@ class Config:
     BROKER_PASS = os.getenv("BROKER_PASS")
     BROKER_PORT = int(os.getenv("BROKER_PORT", 6379))
     BROKER_DB = int(os.getenv("BROKER_DB", 0))
-    RESULT_DB = int(os.getenv("RESULT_DB", 3))
+    RESULT_DB = int(os.getenv("RESULT_DB", 1))
     BROKER_HOST = os.getenv("BROKER_HOST", "127.0.0.1")
     BROKER_SERVICE = os.getenv("BROKER_SERVICE", "redis")
 
