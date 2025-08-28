@@ -4,7 +4,6 @@ from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.database import MyDb
 
 _app = None
-
 def get_app():
     global _app
     if _app is None:
