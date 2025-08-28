@@ -21,3 +21,33 @@ class Config:
     SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
     EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{SERVER_PORT}")
+
+    BROKER_PASS = os.getenv("BROKER_PASS")
+    BROKER_PORT = os.getenv("BROKER_PORT", 6379)
+    BROKER_DB = os.getenv("BROKER_DB", 0)
+    RESULT_DB = os.getenv("RESULT_DB", 1)
+    BROKER_HOST = os.getenv("BROKER_HOST", "127.0.0.1")
+    BROKER_SERVICE = os.getenv("BROKER_SERVICE", "redis")
+
+    # Fixed URL building with proper password handling
+    @classmethod
+    def _build_redis_url(cls, db):
+        """Build Redis URL with proper password handling."""
+        if cls.BROKER_PASS:
+            return f"{cls.BROKER_SERVICE}://:{cls.BROKER_PASS}@{cls.BROKER_HOST}:{cls.BROKER_PORT}/{db}"
+        else:
+            return f"{cls.BROKER_SERVICE}://{cls.BROKER_HOST}:{cls.BROKER_PORT}/{db}"
+
+    @property
+    def CELERY_BROKER_URL(self):
+        return self._build_redis_url(self.BROKER_DB)
+
+    @property
+    def CELERY_RESULT_BACKEND(self):
+        return self._build_redis_url(self.RESULT_DB)
+
+    @property
+    def REDIS_URL(self):
+        return self._build_redis_url(self.BROKER_DB)
+
+    CELERY_REDIS_MAX_CONNECTIONS = os.getenv("CELERY_REDIS_MAX_CONNECTIONS", 10)

@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+
 from flask import request, jsonify, send_file
 from flask_openapi3 import Tag, APIBlueprint
 
@@ -11,6 +13,7 @@ from fuelrod_exporter.schemas.report_resp import (
 from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.services.report_service import ReportService
+from fuelrod_exporter.tasks.export_tasks import generate_excel_task
 
 
 class ReportsController:
@@ -49,14 +52,19 @@ class ReportsController:
 
         @self.api.post(
             "/export",
-            summary="Export filtered reports to Excel and return download link",
+            summary="Queue Excel export via Celery and return download link",
             responses={200: {"type": "object", "properties": {"download_url": {"type": "string"}}}}
         )
         def export_reports(body: ReportFilter):
             try:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"reports_{timestamp}.xlsx"
+                download_url = f"{Config.API_BASE_URL}/downloads/{filename}"
 
-                download_url = self.service.export_reports_to_excel_file(body)
+                # Queue the task
+                generate_excel_task.delay(body.model_dump(), filename)
+
                 return {"download_url": download_url}
             except Exception as e:
-                self.logger.exception("Error exporting reports")
+                self.logger.exception("Failed to queue export")
                 return jsonify({"detail": str(e)}), 500
