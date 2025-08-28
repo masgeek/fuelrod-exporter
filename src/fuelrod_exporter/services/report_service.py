@@ -1,12 +1,15 @@
 import logging
 import os
+import threading
 from datetime import datetime
 from io import BytesIO
 import pandas as pd
 import pytz
+from flask import current_app
 
 from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.repo.report_repo import ReportRepo
+from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.schemas.report_resp import ReportDataRecord, Pagination, ReportResponse
 from fuelrod_exporter.config import Config
 
@@ -73,40 +76,26 @@ class ReportService:
         q = self.repo.build_filtered_query(filters)
         return q.all()
 
-    def export_reports_to_excel_file(self, filters) -> str:
-        """
-        Create an Excel file from filtered records and save to disk.
-        Returns the public path (URL) to download the file.
-        """
+    def generate_excel_task(self, filters: ReportFilter, filename: str):
+
         orm_items = self.get_all_reports(filters)
         dto_records = self._map_to_records(orm_items)
 
+        server_tz = pytz.timezone(Config.SERVER_TZ)
         serialized = []
         for r in dto_records:
             rec = {}
             for k, v in r.model_dump().items():
-                # Convert tz-aware datetimes to server TZ, then string
-                if hasattr(v, "tzinfo"):
-                    if v.tzinfo is not None:
-                        v = v.astimezone(SERVER_TZ)
-                    rec[k] = v.isoformat(sep=" ") if v else None
+                if hasattr(v, "tzinfo") and v.tzinfo is not None:
+                    v = v.astimezone(server_tz).replace(tzinfo=None)
+                    rec[k] = v.isoformat(sep=" ")
+                elif isinstance(v, datetime):
+                    rec[k] = v.isoformat(sep=" ")
                 else:
                     rec[k] = v
             serialized.append(rec)
 
         df = pd.DataFrame(serialized)
-
-        # Ensure export folder exists
-        export_dir = os.path.join(Config.EXPORT_FOLDER)
-        os.makedirs(export_dir, exist_ok=True)
-
-        # Unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"reports_{timestamp}.xlsx"
-        file_path = os.path.join(export_dir, filename)
-
-        # Write to file
+        os.makedirs(Config.EXPORT_FOLDER, exist_ok=True)
+        file_path = os.path.join(Config.EXPORT_FOLDER, filename)
         df.to_excel(file_path, index=False)
-
-        # Return a download URL (assuming you serve EXPORT_FOLDER via /downloads/)
-        return f"{Config.API_BASE_URL}/downloads/{filename}"

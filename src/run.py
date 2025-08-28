@@ -23,7 +23,7 @@ import os
 
 from dotenv import load_dotenv
 
-from fuelrod_exporter import create_app
+from fuelrod_exporter.app import get_app as create_app
 
 load_dotenv()
 
