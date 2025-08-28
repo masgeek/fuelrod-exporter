@@ -1,12 +1,12 @@
 services:
-  kvuno:
-    container_name: kvuno
-    hostname: kvuno
-    image: masgeek/kvuno-api:${TAG:-latest}
+  exporter:
+    container_name: exporter
+    hostname: exporter
+    image: masgeek/fuelrod-exporter:${TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "3000:3000"
     volumes:
       - .:/app
