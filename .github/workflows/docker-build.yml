@@ -1,0 +1,19 @@
+name: DockerBuild
+
+on:
+ push:
+    branches:
+      - 'main'
+      - 'develop'
+      - 'beta/*' # beta/1.0.0
+ workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/docker-build-job.yml
+    with:
+      dockerfile: Dockerfile
+      image_name: masgeek/fuelrod-exporter
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
