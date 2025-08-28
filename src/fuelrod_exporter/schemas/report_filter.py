@@ -1,9 +1,8 @@
 from calendar import monthrange
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from enum import Enum
 from typing import Optional
 
-from dateutil.relativedelta import relativedelta
 from pydantic import Field, field_validator, model_validator, ConfigDict, conlist
 
 from fuelrod_exporter.models.common import ReportFilterBase
@@ -13,10 +12,19 @@ from fuelrod_exporter.schemas.validators import (
     validate_sort_by,
 )
 
-today = date.today()
-first_day = today.replace(day=1) - relativedelta(months=3)
-last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+def subtract_months(dt: date, months: int) -> date:
+    """Subtract months from a date without using dateutil."""
+    year = dt.year
+    month = dt.month - months
+    while month <= 0:
+        month += 12
+        year -= 1
+    day = min(dt.day, monthrange(year, month)[1])
+    return date(year, month, day)
 
+today = date.today()
+first_day = subtract_months(today.replace(day=1), 3)
+last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
 
 class ReportFilter(ReportFilterBase):
     campaign_id: Optional[conlist(item_type=int)] = Field(
@@ -39,7 +47,6 @@ class ReportFilter(ReportFilterBase):
         },
     )
 
-    # Plug in validators
     _validate_api_account_id = field_validator("api_account_id", mode="before")(validate_api_account_id)
     _validate_campaign_id = field_validator("campaign_id", mode="before")(validate_campaign_id)
     _validate_sort_by = field_validator("sort_by", mode="before")(validate_sort_by)
