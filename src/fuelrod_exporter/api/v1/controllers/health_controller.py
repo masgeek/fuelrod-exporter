@@ -6,6 +6,7 @@ from flask_openapi3 import APIBlueprint, Tag
 from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.database import MyDb
 from fuelrod_exporter.core.logging import SharedLogger
+from fuelrod_exporter.tasks.system_tasks import ping
 
 
 class HealthController:
@@ -27,20 +28,38 @@ class HealthController:
         self._register_routes()
 
     def _register_routes(self):
-        @self.api.get("/")
+        @self.api.get("/", summary="Combined health check")
         def health_check():
-            """
-            Basic health check.
-            Optionally pings DB to verify connectivity.
-            """
+            status = {
+                "status": "healthy",
+                "components": {
+                    "database": "unknown",
+                    "celery": "unknown"
+                }
+            }
+
+            # Check DB
             try:
                 db_connected = MyDb.check_db_connection()
-                health_status = {
-                    "status": "healthy" if db_connected else "unhealthy",
-                    "db": "UP" if db_connected else "DOWN",
-                    "db_details": MyDb.get_db_details() if db_connected else {},
-                }
-                return jsonify(health_status), 200 if db_connected else 500
+                status["components"]["database"] = "UP" if db_connected else "DOWN"
+                if not db_connected:
+                    status["status"] = "degraded"
             except Exception as e:
-                self.logger.error(f"Error checking DB connection: {e}", exc_info=True)
-                return jsonify({"status": "degraded", "db": str(e)}), 500
+                status["components"]["database"] = f"ERROR: {str(e)}"
+                status["status"] = "degraded"
+
+            # Check Celery
+            try:
+                result = ping.delay()
+                result_value = result.get(timeout=5)
+                if result_value == "pong":
+                    status["components"]["celery"] = "UP"
+                else:
+                    status["components"]["celery"] = "UNRESPONSIVE"
+                    status["status"] = "degraded"
+            except Exception as e:
+                status["components"]["celery"] = f"ERROR: {str(e)}"
+                status["status"] = "degraded"
+
+            code = 200 if status["status"] == "healthy" else 500
+            return jsonify(status), code
