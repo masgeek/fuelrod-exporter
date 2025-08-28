@@ -2,13 +2,15 @@ import os
 
 from dotenv import load_dotenv
 from flask_cors import CORS
+from flask_dramatiq import Dramatiq
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
 from fuelrod_exporter.core.database import MyDb
-from fuelrod_exporter.core.celery import my_celery as celery
 from fuelrod_exporter.api.v1.routes import v1_blueprints
-from fuelrod_exporter.api.v1.controllers.report_controller import ReportsController
 from fuelrod_exporter.config import Config
+
+import dramatiq
+from dramatiq.brokers.redis import RedisBroker
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,61 +49,6 @@ def init_db(app):
     MyDb.init_app(app)
 
 
-def init_celery(app, celery_app):
-    """Initialize Celery with the Flask app context."""
-
-    # Get config instance
-
-    # Build Redis URLs properly
-    def build_redis_url(db):
-        if Config.BROKER_PASS:
-            return f"{Config.BROKER_SERVICE}://:{Config.BROKER_PASS}@{Config.BROKER_HOST}:{Config.BROKER_PORT}/{db}"
-        else:
-            return f"{Config.BROKER_SERVICE}://{Config.BROKER_HOST}:{Config.BROKER_PORT}/{db}"
-
-    broker_url = build_redis_url(Config.BROKER_DB)
-    result_backend = build_redis_url(Config.RESULT_DB)
-
-    # Update Celery configuration with Flask app config
-    celery_app.conf.update(
-        broker_url=broker_url,
-        result_backend=result_backend,
-        task_serializer='json',
-        accept_content=['json'],
-        result_serializer='json',
-        timezone=Config.SERVER_TZ,
-        enable_utc=True,
-        broker_connection_retry_on_startup=True,
-        broker_connection_retry=True,
-        broker_connection_max_retries=10,
-        redis_max_connections=int(Config.CELERY_REDIS_MAX_CONNECTIONS),
-        task_track_started=True,
-        task_time_limit=30 * 60,  # 30 minutes
-        task_soft_time_limit=25 * 60,  # 25 minutes
-        worker_prefetch_multiplier=1,
-        worker_max_tasks_per_child=1000,
-    )
-
-    # Ensure tasks run within Flask app context
-    class ContextTask(celery_app.Task):
-        """Make celery tasks work with Flask app context."""
-
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app.Task = ContextTask
-
-    # Force reload configuration
-    try:
-        celery_app.loader.init_worker_process()
-    except AttributeError:
-        # Some Celery versions don't have this method
-        pass
-
-    return celery_app
-
-
 def create_app():
     """Create and configure the Flask app."""
     app = OpenAPI(
@@ -122,31 +69,24 @@ def create_app():
     app.config['SQLALCHEMY_ECHO'] = Config.DEBUG_DB
     app.json.sort_keys = Config.SORT_JSON
 
-    # Add Celery configuration to Flask config (for consistency)
+    app.config["DRAMATIQ_BROKER"] = {
+        "BROKER": "dramatiq.brokers.redis.RedisBroker",
+        "OPTIONS": {
+            "url": f"redis://:{Config.BROKER_PASS}@{Config.BROKER_HOST}:{Config.BROKER_PORT}/{Config.BROKER_DB}"
+        },
+    }
+    app.config["DRAMATIQ_TASKS"] = [
+        "fuelrod_exporter.tasks",  # module with your dramatiq tasks
+    ]
 
-    app.config['CELERY_BROKER_URL'] = Config.CELERY_BROKER_URL
-    app.config['CELERY_RESULT_BACKEND'] = Config.CELERY_RESULT_BACKEND
-
-    # Initialize the database
+    # Initialize database
     init_db(app)
 
-    # Initialize Celery with Flask app context
-    init_celery(app, celery)
-
-    # print(app.config)
-
-    # Initialize the database
-    init_db(app)
+    # Initialize Dramatiq
+    Dramatiq(app)
 
     # Register APIs and other routes
     for bp in v1_blueprints:
-        print(bp)
         app.register_api(bp)
 
     return app
-
-
-def create_celery_app():
-    """Create a Celery app for running workers."""
-    flask_app = create_app()
-    return celery

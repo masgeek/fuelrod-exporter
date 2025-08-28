@@ -1,34 +1,32 @@
-# fuelrod_exporter/tasks/system_tasks.py
-
-from fuelrod_exporter.core.celery import my_celery as celery
 import datetime
 import time
+# import dramatiq
+from fuelrod_exporter.core.broker import redis_broker as dramatiq
+from fuelrod_exporter.core.database import MyDb
 
 
-@celery.task(bind=True, name="system.health_check")
-def health_check_task(self):
+@dramatiq.actor(store_results=True)
+def health_check_task():
     """
     Lightweight end-to-end healthcheck.
-    Ensures worker, broker, and result backend are functional.
+    Ensures worker and broker are functional.
     """
     return {
         "status": "ok",
-        "worker_id": self.request.id,
         "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "response_time": time.time(),
     }
 
 
-@celery.task(bind=True, name="system.test_database")
-def test_database_task(self):
+@dramatiq.actor(store_results=True)
+def test_database_task():
     """
-    Test database connectivity from within a Celery task.
+    Test database connectivity from within a Dramatiq task.
     Validates that workers can reach the database.
     """
     try:
-        from fuelrod_exporter.core.database import MyDb
 
-        result = MyDb.get_db().session.execute("SELECT 1").fetchone()
+        result = MyDb.check_db_execution()
         return {
             "status": "success",
             "message": "Database connection successful from worker",
