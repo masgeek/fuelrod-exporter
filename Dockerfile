@@ -1,37 +1,34 @@
-# Use an official Python base image (adjust to match your Python requirement)
-FROM python:3.13.0a6-slim
+# Base image for API and Worker
+FROM python:3.13.0a6-slim AS base
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.8.2
+    PYTHONUNBUFFERED=1
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        curl \
-        build-essential \
-        libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
-
-# Set work directory
 WORKDIR /app
 
-# Copy only poetry files first for caching
-COPY pyproject.toml poetry.lock* /app/
+# ---- COPY FILES FIRST ----
+COPY pyproject.toml /app/
+COPY poetry.lock /app/
+COPY README.md /app
 
-# Install dependencies
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    supervisor \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy the rest of the code
-COPY ./src /app/src
-COPY ./README.md /app/
+# Install latest Poetry 2.x
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python3 - \
+    && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
-# Set the default command
-CMD ["sms-callback"]
+
+# ---- Install dependencies ----
+RUN poetry config virtualenvs.create false
+
+RUN poetry install --no-interaction --no-ansi --no-root
+
+RUN mkdir -p /app/exports && chmod 777 /app/exports
+
+RUN mkdir -p /app/logs && chmod 777 /app/logs
