@@ -1,37 +1,69 @@
 import sys
+import os
+
+from dotenv import load_dotenv
 from loguru import logger
-from colorama import init, Fore, Style
+from colorama import init
+
+load_dotenv(verbose=True)
 
 
 class SharedLogger:
-    def __init__(self, log_file=None, level='INFO'):
-        self.log_file = log_file
-        self.level = level
-        init(autoreset=True)  # Initialize Colorama
-        self.configure_logger()
+    _configured = False  # ensure logger is only configured once
 
-    def configure_logger(self):
-        logger.remove()  # Remove default configuration
+    def __init__(self):
+        self.log_dir = os.getenv("LOG_DIR", "logs")
+        self.level = os.getenv("LOG_LEVEL", "INFO")
+        self.retention = os.getenv("LOG_RETENTION", "7 days")
+        self.enable_file_logs = os.getenv("ENABLE_FILE_LOGS", "true").lower() == "true"
+        init(autoreset=True)
 
-        # Configure logger to write to file if specified
-        if self.log_file:
-            logger.add(self.log_file, rotation='10 MB', level=self.level, colorize=False)
+        if not SharedLogger._configured:
+            self._configure_logger()
+            SharedLogger._configured = True
 
-        # Always log to the console with color
+    def _configure_logger(self):
+        logger.remove()
+        os.makedirs(self.log_dir, exist_ok=True)
+
+        if self.enable_file_logs:
+            # All logs
+            all_path = os.path.join(self.log_dir, "fuelrod_{time:YYYY-MM-DD}.log")
+            logger.add(
+                all_path,
+                level=self.level,
+                rotation="00:00",  # rotate daily
+                retention=self.retention,
+                enqueue=True,
+            )
+
+            # Error and above
+            # error_path = os.path.join(self.log_dir, "error_{time:YYYY-MM-DD}.log")
+            # logger.add(
+            #     error_path,
+            #     level="ERROR",
+            #     rotation="00:00",
+            #     retention=self.retention,
+            #     enqueue=True,
+            # )
+            # critical_path = os.path.join(self.log_dir, "critical_{time:YYYY-MM-DD}.log")
+            # logger.add(
+            #     critical_path,
+            #     level="CRITICAL",
+            #     rotation="00:00",
+            #     retention=self.retention,
+            #     enqueue=True,
+            # )
+
+        # Console logs (always)
         logger.add(
             sys.stdout,
             level=self.level,
             colorize=True,
-            format=self.get_colored_format()
-        )
-
-    def get_colored_format(self):
-        """Define colorized format using Colorama"""
-        return (
-            f"<green>{{time:YYYY-MM-DD HH:mm:ss}}</green> | "
-            f"<level>{Fore.CYAN}{{level}}{Style.RESET_ALL}</level> | "
-            f"<cyan>{{name}}</cyan>:<cyan>{{function}}</cyan>:<cyan>{{line}}</cyan> - "
-            f"<level>{{message}}</level>"
+            # format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> "
+            #        "| <level>{level:<8}</level> "
+            #        "| <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+            #        "<level>{message}</level>",
         )
 
     def get_logger(self):
