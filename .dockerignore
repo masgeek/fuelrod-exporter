@@ -1,0 +1,10 @@
+.env
+.venv/
+*.db
+.idea/
+.github
+tests
+renovate.json
+.pylintrc
+.gitignore
+__pycache__/
