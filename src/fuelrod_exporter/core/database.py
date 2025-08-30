@@ -5,16 +5,18 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, text
 from sqlalchemy.exc import OperationalError
 
+from fuelrod_exporter.config import Config
+
 load_dotenv(verbose=True)
 
 # Create the SQLAlchemy instance ONCE (no app bound yet)
-metadata = MetaData(schema=os.getenv("DB_SCHEMA", "public"))
+metadata = MetaData(schema=Config.DB_SCHEMA)
 db = SQLAlchemy(metadata=metadata)
 
 
 class MyDb:
-    db_url: str = os.getenv("DB_URL")
-    db_schema: str = os.getenv("DB_SCHEMA", "public")  # Default to 'public'
+    db_url: str = Config.SQLALCHEMY_DATABASE_URI
+    db_schema: str = Config.DB_SCHEMA
 
     @classmethod
     def init_app(cls, app: Flask):
