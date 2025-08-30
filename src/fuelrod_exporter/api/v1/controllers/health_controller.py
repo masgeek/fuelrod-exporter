@@ -26,7 +26,7 @@ class HealthController:
         )
 
         # Repo & logger
-        self.logger = SharedLogger(level=logging.DEBUG).get_logger()
+        self.logger = SharedLogger().get_logger()
 
         # Register routes
         self._register_routes()

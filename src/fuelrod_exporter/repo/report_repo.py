@@ -11,7 +11,7 @@ from fuelrod_exporter.models.fuelrod_views import SmsReport
 from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.core.logging import SharedLogger
 
-shared_logger = SharedLogger(level=logging.DEBUG)
+shared_logger = SharedLogger()
 
 
 class ReportRepo:

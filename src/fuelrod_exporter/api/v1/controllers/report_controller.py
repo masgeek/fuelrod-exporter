@@ -32,7 +32,7 @@ class ReportsController:
         )
         # Repo & logger
         self.service = ReportService()
-        self.logger = SharedLogger(level=logging.DEBUG).get_logger()
+        self.logger = SharedLogger().get_logger()
         # Register routes
         self._register_routes()
 
