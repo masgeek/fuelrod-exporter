@@ -6,7 +6,7 @@ from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.services.report_service import ReportService
 from fuelrod_exporter.core.logging import SharedLogger
 
-logger = SharedLogger(level=logging.DEBUG).get_logger()
+logger = SharedLogger().get_logger()
 app = get_app()
 
 
