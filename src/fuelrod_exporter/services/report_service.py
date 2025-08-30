@@ -17,7 +17,7 @@ SERVER_TZ = tz.gettz(Config.SERVER_TZ)  # e.g., "Africa/Nairobi"
 class ReportService:
     def __init__(self):
         self.repo = ReportRepo()
-        self.logger = SharedLogger(level=logging.DEBUG).get_logger()
+        self.logger = SharedLogger().get_logger()
 
     def _map_to_record(self, item) -> ReportDataRecord:
         """
