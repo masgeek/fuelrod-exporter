@@ -1,13 +1,41 @@
+import logging
 import os
 
 from dotenv import load_dotenv
+from fuelrod_exporter.core.logging import SharedLogger
 
 load_dotenv(verbose=True)
 
+logger = SharedLogger().get_logger()
+REQUIRED_KEYS = [
+    "DB_USERNAME",
+    "DB_PASSWORD",
+    "DB_HOST",
+    "DB_DATABASE",
+    "DB_SCHEMA"
+]
+
+missing = [key for key in REQUIRED_KEYS if not os.getenv(key)]
+if missing:
+    message = "Missing required environment variables: " + ", ".join(missing)
+    logger.critical(message)
+    raise EnvironmentError(message)
 
 class Config:
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv("DB_URL")
+    DB_DRIVER = os.getenv("DB_DRIVER", "postgresql")
+    DB_USER = os.getenv("DB_USERNAME", "pguser")
+    DB_PASS = os.getenv("DB_PASSWORD", "")
+    DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_NAME = os.getenv("DB_DATABASE", "fuelrod")
+    DB_SCHEMA = os.getenv("DB_SCHEMA", "public")
+
+    if DB_PASS:
+        SQLALCHEMY_DATABASE_URI = f"{DB_DRIVER}://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    else:
+        SQLALCHEMY_DATABASE_URI = f"{DB_DRIVER}://{DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DEBUG_DB = os.getenv("DEBUG_DB") == "1"
     SORT_JSON = os.getenv("SORT_JSON") == "1"
