@@ -1,12 +1,47 @@
+name: fuelrod
+
 services:
-  exporter:
-    container_name: exporter
-    hostname: exporter
-    image: masgeek/fuelrod-exporter:${TAG:-latest}
+  base:
+    container_name: base
+    hostname: base
     build:
       context: .
       dockerfile: Dockerfile
+    image: masgeek/fuelrod-exporter-base:${TAG:-latest}
+  api:
+    container_name: api
+    hostname: api
+    build:
+      context: .
+      dockerfile: Dockerfile.api.dockerfile
+    image: masgeek/fuelrod-exporter-api:${TAG:-latest}
     ports:
-      - "3000:3000"
+      - "3000:3000"  # expose API
+    volumes:
+#      - .:/app
+      - ./logs:/app/logs
+
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-fuelrod}
+      DB_SCHEMA: ${DB_SCHEMA:-fuelrod}
+      CONFIG_ENV: ${CONFIG_ENV:-prod}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
+  worker:
+    container_name: worker
+    hostname: worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: masgeek/fuelrod-exporter-worker:${TAG:-latest}
     volumes:
       - .:/app
+    environment:
+      CONFIG_ENV: ${CONFIG_ENV:-prod}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    restart: always
+
