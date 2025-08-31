@@ -37,10 +37,5 @@ COPY . /app
 RUN mkdir -p /app/logs && chmod 777 /app/logs
 
 # Default API command
-#CMD ["gunicorn", "-c", "src/gunicorn.conf.py", "wsgi:app"]
-#CMD [ "python3", "src/run.py"]
-#ENTRYPOINT ["gunicorn", "wsgi:app", "-c", "src/gunicorn.conf.py"]
-#ENTRYPOINT ["/bin/sh", "-c", "cd src && gunicorn wsgi:app -c gunicorn.conf.py"]
-CMD ["gunicorn", "-c", "src/gunicorn.conf.py", "wsgi:app", "--chdir", "src"]
-#ENTRYPOINT ["/bin/sh", "-c", "gunicorn fuelrod_exporter.wsgi:app -c src/gunicorn.conf.py || (echo 'Gunicorn failed. Sleeping for debug...' && sleep infinity)"]
-
+CMD [ "python3", "src/run.py"]
+#CMD ["gunicorn", "-c", "src/gunicorn.conf.py", "wsgi:app", "--chdir", "src"]
