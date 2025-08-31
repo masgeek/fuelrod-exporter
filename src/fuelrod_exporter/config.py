@@ -10,9 +10,6 @@ logger = SharedLogger().get_logger()
 REQUIRED_KEYS = [
     "DB_USERNAME",
     "DB_PASSWORD",
-    "DB_HOST",
-    "DB_DATABASE",
-    "DB_SCHEMA"
 ]
 
 missing = [key for key in REQUIRED_KEYS if not os.getenv(key)]
@@ -28,7 +25,7 @@ class Config:
     DB_PASS = os.getenv("DB_PASSWORD", "")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_NAME = os.getenv("DB_DATABASE", "fuelrod")
+    DB_NAME = os.getenv("DB_DATABASE", "postgres")
     DB_SCHEMA = os.getenv("DB_SCHEMA", "public")
 
     if DB_PASS:
