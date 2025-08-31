@@ -13,7 +13,8 @@ class SharedLogger:
 
     def __init__(self):
         self.log_dir = os.getenv("LOG_DIR", "logs")
-        self.level = os.getenv("LOG_LEVEL", "INFO")
+        level = os.getenv("LOG_LEVEL", "INFO")
+        self.level = level.upper()
         self.retention = os.getenv("LOG_RETENTION", "7 days")
         self.enable_file_logs = os.getenv("ENABLE_FILE_LOGS", "true").lower() == "true"
         init(autoreset=True)
