@@ -1,6 +1,7 @@
 import logging
 import os
 
+from apscheduler.schedulers import SchedulerNotRunningError
 from dotenv import load_dotenv
 from fuelrod_exporter.core.logging import SharedLogger
 
@@ -60,7 +61,11 @@ class Config:
     # Server
     SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
     EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
+    EXPORT_MAX_AGE = int(os.getenv("EXPORT_MAX_AGE", "60"))
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
+
+    # SchedulerNotRunningError
+    SCHEDULER_API_ENABLED = os.getenv("SCHEDULER_API_ENABLED", "true").lower() == "true"
 
     # Redis / Celery
     BROKER_PASS = os.getenv("BROKER_PASS")
@@ -83,3 +88,13 @@ class Config:
     )
 
     REDIS_URL = BROKER_URL
+
+    SCHEDULER_JOBS = [
+        {
+            "id": "cleanup_exports",
+            "func": "fuelrod_exporter.tasks.cleanup:trigger_cleanup",
+            "trigger": "interval",
+            "seconds": 15,
+            "replace_existing": True
+        }
+    ]
