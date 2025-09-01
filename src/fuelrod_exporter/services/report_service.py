@@ -30,10 +30,18 @@ HEADER_OVERRIDES = {
 
 class ReportService:
 
-    def __init__(self):
+    def __init__(
+            self,
+            header_overrides: dict[str, str] | None = None,
+            acronym_overrides: dict[str, str] | None = None,
+    ):
         self.repo = ReportRepo()
         self.logger = SharedLogger().get_logger()
         self.minio = MinioFileUploader()
+
+        # ✅ merge global + instance config
+        self.header_overrides = {**HEADER_OVERRIDES, **(header_overrides or {})}
+        self.acronym_overrides = {**ACRONYM_OVERRIDES, **(acronym_overrides or {})}
 
     # noinspection PyMethodMayBeStatic
     def _map_to_record(self, item) -> ReportDataRecord:
@@ -67,22 +75,21 @@ class ReportService:
         return [self._map_to_record(item) for item in items]
 
     # noinspection PyTypeChecker
-    @staticmethod
-    def _humanize_header(header: str) -> str:
+    def _humanize_header(self, header: str) -> str:
         """
         Convert snake_case header names into human-friendly labels,
-        with support for manual overrides.
+        respecting overrides, acronyms.
         """
         # Check manual override first
-        if header in HEADER_OVERRIDES:
-            return HEADER_OVERRIDES[header]
+        if header in self.header_overrides:
+            return self.header_overrides[header]
 
         parts = header.split("_")
         human_parts = []
         for part in parts:
             # ✅ check acronyms first
-            if part.lower() in ACRONYM_OVERRIDES:
-                word = ACRONYM_OVERRIDES[part.lower()]
+            if part.lower() in self.acronym_overrides:
+                word = self.acronym_overrides[part.lower()]
             else:
                 # ✅ keep inflect only for real plurals (like "users" → "User")
                 word = p.singular_noun(part) or part
