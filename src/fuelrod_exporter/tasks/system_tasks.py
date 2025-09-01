@@ -1,8 +1,10 @@
 import datetime
 import time
 import dramatiq
+from fuelrod_exporter.worker_app import get_app
 from fuelrod_exporter.core.database import MyDb
 
+app = get_app()
 
 @dramatiq.actor(store_results=True)
 def health_check_task():
