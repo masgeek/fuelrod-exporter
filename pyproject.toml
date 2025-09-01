@@ -38,6 +38,7 @@ sqlacodegen = {version = "^3.1.0", allow-prereleases = true}
 pylint = "^3.3.8"
 pytest = "^8.4.1"
 requests = "^2.32.5"
+watchdog = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
