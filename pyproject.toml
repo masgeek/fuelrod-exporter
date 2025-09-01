@@ -1,6 +1,6 @@
 [project]
 name = "fuelrod-exporter"
-version = "1.0.0"
+version = "1.0.1"
 description = "REST service for exporting large record sets with filtering and querying capabilities"
 authors = [
     {name = "Munywele Sammy Barasa", email = "sammy@munywele.co.ke"}
@@ -27,6 +27,7 @@ dependencies = [
     "python-dateutil (>=2.9.0.post0,<3.0.0)",
     "uvicorn (>=0.35.0,<0.36.0)",
     "minio (>=7.2.16,<8.0.0)",
+    "flask-apscheduler (>=1.13.1,<2.0.0)",
 ]
 
 [tool.poetry]
@@ -46,3 +47,6 @@ build-backend = "poetry.core.masonry.api"
 lint = "pylint.__main__:run"
 models = "fuelrod_exporter.model_gen:main"
 test = "fuelrod_exporter.main:main"
+scheduler = "fuelrod_exporter.run_scheduler:main"
+queue="dramatiq fuelrod_exporter.tasks --processes 1 --threads 1"
+
