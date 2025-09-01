@@ -36,7 +36,7 @@ services:
     hostname: worker
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile.worker.dockerfile
     image: masgeek/fuelrod-exporter-worker:${TAG:-latest}
     volumes:
       - .:/app
