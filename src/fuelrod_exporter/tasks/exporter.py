@@ -10,6 +10,7 @@ logger = SharedLogger().get_logger()
 app = get_app()
 
 
+# time limit is in seconds
 @dramatiq.actor(store_results=True)
 def generate_excel_task(payload: dict, filename: str):
     with app.app_context():
@@ -20,5 +21,5 @@ def generate_excel_task(payload: dict, filename: str):
             service.generate_excel_task(filters, filename)
             logger.info(f"Finished Excel generation:  {filename}")
         except Exception as e:
-            logger.exception("Error during Excel generation: %s", filename)
-            raise
+            logger.error("Error during Excel generation: %s", filename)
+            raise e
