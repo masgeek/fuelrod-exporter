@@ -101,6 +101,16 @@ class MinioFileUploader:
             self.logger.error(f"Upload failed for '{local_path}': {e}")
             raise
 
+    def remove_object(self, object_name: str) -> None:
+        """Delete an object from MinIO by its key (filename)."""
+        client = self.connect()
+        try:
+            client.remove_object(Config.MINIO_BUCKET, object_name)
+            self.logger.info(f"Deleted object '{object_name}' from bucket '{Config.MINIO_BUCKET}'")
+        except S3Error as e:
+            self.logger.error(f"Failed to delete object '{object_name}': {e}")
+            raise
+
     def upload_data(self, data: bytes, object_name: str, content_type: Optional[str] = None) -> str:
         """Upload raw bytes as an object to MinIO and return its public URL."""
         client = self.connect()
