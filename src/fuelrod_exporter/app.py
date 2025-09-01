@@ -2,6 +2,7 @@
 
 import os
 from dotenv import load_dotenv
+from flask_apscheduler import APScheduler
 from flask_cors import CORS
 from flask_openapi3 import OpenAPI, Server, Contact, License, Info
 
@@ -35,11 +36,14 @@ servers = [
     Server(url=os.getenv("SERVER_URL_PROD", "https://export.munywele.co.ke")),
 ]
 
+
 def init_db(app):
     MyDb.init_app(app)
 
+
 # **Singleton app instance**
 _app = None
+
 
 def get_app():
     global _app
@@ -60,5 +64,14 @@ def get_app():
         init_db(app)
         for bp in v1_blueprints:
             app.register_api(bp)
+
+        scheduler = APScheduler()
+        scheduler.api_enabled = Config.SCHEDULER_API_ENABLED
+        # 🔁 Register jobs explicitly
+        for job in Config.SCHEDULER_JOBS:
+            scheduler.add_job(**job)
+
+        scheduler.init_app(app)
+        scheduler.start()
         _app = app
     return _app
