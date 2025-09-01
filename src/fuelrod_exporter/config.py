@@ -10,6 +10,8 @@ logger = SharedLogger().get_logger()
 REQUIRED_KEYS = [
     "DB_USERNAME",
     "DB_PASSWORD",
+    "MINIO_ACCESS_KEY",
+    "MINIO_SECRET_KEY"
 ]
 
 missing = [key for key in REQUIRED_KEYS if not os.getenv(key)]
@@ -17,6 +19,7 @@ if missing:
     message = "Missing required environment variables: " + ", ".join(missing)
     logger.critical(message)
     raise EnvironmentError(message)
+
 
 class Config:
     # Database
@@ -46,6 +49,13 @@ class Config:
     TERMS_OF_SERVICE_URL = os.getenv(
         "TERMS_OF_SERVICE_URL", "https://munywele.co.ke/terms-of-service"
     )
+
+    # min io
+    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
+    MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
+    MINIO_BUCKET = os.getenv("MINIO_BUCKET", "fuelrod")
+    MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
     # Server
     SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
