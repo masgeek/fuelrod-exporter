@@ -24,6 +24,7 @@ import os
 from dotenv import load_dotenv
 
 from fuelrod_exporter.app import get_app as create_app
+from fuelrod_exporter.core.auto_reload import watch_env
 
 load_dotenv()
 
