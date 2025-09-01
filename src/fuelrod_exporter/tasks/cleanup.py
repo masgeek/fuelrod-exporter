@@ -1,12 +1,15 @@
-from pathlib import Path
 from datetime import datetime, timedelta
-from fuelrod_exporter.core.logging import SharedLogger
-from fuelrod_exporter.worker_app import get_app as current_app
-from fuelrod_exporter.config import Config
+from pathlib import Path
+
 import dramatiq
-import os
+
+from fuelrod_exporter.config import Config
+from fuelrod_exporter.core.logging import SharedLogger
+from fuelrod_exporter.utils import format_size
+from fuelrod_exporter.services.minio_service import MinioFileUploader
 
 logger = SharedLogger().get_logger()
+minio = MinioFileUploader()
 
 PROTECTED_FILES = {".gitignore"}
 
@@ -14,6 +17,7 @@ PROTECTED_FILES = {".gitignore"}
 @dramatiq.actor(store_results=True)
 def cleanup_export_folder(directory: str, max_age_minutes: int = 60):
     cutoff = datetime.now() - timedelta(minutes=max_age_minutes)
+    now = datetime.now()
     deleted = 0
     path = Path(directory).resolve()
 
@@ -21,31 +25,35 @@ def cleanup_export_folder(directory: str, max_age_minutes: int = 60):
         logger.warning(f"Export folder does not exist: {directory}")
         return
 
-    # 🧾 Header
     logger.info("📂 Export Folder Contents:")
-    logger.info(f"{'File Name':<30} {'Modified':<25} {'Status'}")
-    logger.info("-" * 70)
+    logger.info(f"{'File Name':<30} {'Modified':<20} {'Age':<10} {'Size':<10} {'Status'}")
+    logger.info("-" * 100)
 
     for file in path.iterdir():
-        modified = datetime.fromtimestamp(file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        modified = datetime.fromtimestamp(file.stat().st_mtime)
+        age_minutes = int((now - modified).total_seconds() / 60)
+        size = format_size(file.stat().st_size)
         status = ""
 
         if file.name in PROTECTED_FILES:
             status = "🔒 Skipped (protected)"
-        elif file.is_file() and file.stat().st_mtime < cutoff.timestamp():
+        elif file.is_file() and modified < cutoff:
             try:
                 file.unlink()
-                status = "🗑️ Deleted"
+                minio.remove_object(file.name)
+                status = "🗑️ Deleted (local + MinIO)"
                 deleted += 1
             except Exception as e:
                 status = f"⚠️ Failed: {e}"
         else:
             status = "✅ Retained"
 
-        logger.info(f"{file.name:<30} {modified:<25} {status}")
+        logger.info(
+            f"{file.name:<30} {modified.strftime('%Y-%m-%d %H:%M'):<20} {age_minutes:>5} min   {size:<10} {status}")
 
-    logger.info("-" * 70)
-    logger.info(f"Cleanup complete. {deleted} files deleted from {directory}")
+    logger.info("-" * 100)
+    logger.info(f"Cleanup complete. {deleted} files deleted from {directory} and MinIO")
+
 
 def trigger_cleanup():
     folder = Config.EXPORT_FOLDER
