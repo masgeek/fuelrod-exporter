@@ -33,4 +33,5 @@ if os.getenv("FLASK_ENV") == "development":
     # Load initially
     load_dotenv(override=True)
 else:
-    watch_env = None
+    def watch_env():
+        print("Not in development mode, skipping auto-reload")
