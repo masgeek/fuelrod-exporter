@@ -65,13 +65,19 @@ def get_app():
         for bp in v1_blueprints:
             app.register_api(bp)
 
-        scheduler = APScheduler()
-        scheduler.api_enabled = Config.SCHEDULER_API_ENABLED
-        # 🔁 Register jobs explicitly
-        for job in Config.SCHEDULER_JOBS:
-            scheduler.add_job(**job)
+        if Config.SCHEDULER_ENABLED:
+            scheduler = APScheduler()
+            scheduler.api_enabled = Config.SCHEDULER_API_ENABLED
 
-        scheduler.init_app(app)
-        scheduler.start()
+            for job in Config.SCHEDULER_JOBS:
+                scheduler.add_job(**job)
+
+            scheduler.init_app(app)
+            scheduler.start()
+            app.logger.info("✅ Scheduler started with registered jobs.")
+        else:
+            app.logger.info("⏸️ Scheduler is disabled. No jobs registered.")
+
+
         _app = app
     return _app
