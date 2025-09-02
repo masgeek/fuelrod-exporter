@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from dateutil import tz
 from flask import request, jsonify, send_file
 from flask_openapi3 import Tag, APIBlueprint
 
@@ -13,8 +14,12 @@ from fuelrod_exporter.schemas.report_resp import (
 from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.schemas.serilizer import serialize_dates
+from fuelrod_exporter.services.minio_service import MinioService
 from fuelrod_exporter.services.report_service import ReportService
 from fuelrod_exporter.tasks.exporter import generate_excel_task
+from fuelrod_exporter.utils import format_age
+
+SERVER_TZ = tz.gettz(Config.SERVER_TZ)  # e.g., "Africa/Nairobi"
 
 
 class ReportsController:
@@ -58,7 +63,8 @@ class ReportsController:
         )
         def export_reports(body: ReportFilter):
             try:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                now = datetime.now(tz=SERVER_TZ)
+                timestamp = now.strftime("%Y%m%d_%H%M%S")
                 filename = f"reports_{timestamp}.xlsx"
                 download_url = f"{Config.API_BASE_URL}/downloads/{filename}"
 
