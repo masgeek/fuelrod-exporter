@@ -4,6 +4,7 @@ import re
 from dotenv import load_dotenv
 
 from fuelrod_exporter.core.logging import SharedLogger
+from fuelrod_exporter.utils import parse_interval_to_seconds
 
 load_dotenv(verbose=True)
 
@@ -20,27 +21,6 @@ if missing:
     message = "Missing required environment variables: " + ", ".join(missing)
     logger.critical(message)
     raise EnvironmentError(message)
-
-
-def parse_interval_to_seconds(interval_str: str) -> int:
-    """
-    Converts interval strings like '30s', '15m', '2h', '1d' into seconds.
-    """
-    match = re.match(r"^(\d+)([smhd])$", interval_str.strip().lower())
-    if not match:
-        raise ValueError(f"Invalid SCHEDULER_INTERVAL format: '{interval_str}'")
-
-    value, unit = match.groups()
-    value = int(value)
-
-    unit_multipliers = {
-        "s": 1,
-        "m": 60,
-        "h": 3600,
-        "d": 86400
-    }
-
-    return value * unit_multipliers[unit]
 
 
 class Config:
@@ -73,7 +53,7 @@ class Config:
     )
 
     # min io
-    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
+    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9005")
     MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
     MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
     MINIO_BUCKET = os.getenv("MINIO_BUCKET", "fuelrod")
@@ -86,7 +66,7 @@ class Config:
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
 
     # SchedulerNotRunningError
-    SCHEDULER_API_ENABLED = os.getenv("SCHEDULER_API_ENABLED", "true").lower() == "true"
+    SCHEDULER_API_ENABLED = os.getenv("SCHEDULER_API_ENABLED", "false").lower() == "true"
 
     # Redis / Celery
     BROKER_PASS = os.getenv("BROKER_PASS")

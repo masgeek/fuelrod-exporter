@@ -23,8 +23,6 @@ from fuelrod_exporter.app import get_app as create_app
 
 load_dotenv()
 
-watch_env()
-
 app = create_app()
 app.app_context().push()
 

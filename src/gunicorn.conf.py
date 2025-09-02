@@ -13,6 +13,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 accesslog = os.path.join(log_dir, "gunicorn-access.log")
 errorlog = os.path.join(log_dir, "gunicorn-error.log")
+preload_app = os.getenv("PRELOAD_APP", "1") == "1"
 capture_output = True
 
 # 🧵 Worker config

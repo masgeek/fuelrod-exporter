@@ -37,5 +37,5 @@ COPY . /app
 RUN mkdir -p /app/logs && chmod 777 /app/logs
 
 # Default API command
-CMD [ "python3", "src/run.py"]
-#CMD ["gunicorn", "-c", "src/gunicorn.conf.py", "wsgi:app", "--chdir", "src"]
+#CMD [ "python3", "src/run.py"]
+CMD ["gunicorn", "-c", "src/gunicorn.conf.py", "wsgi:app", "--chdir", "src"]
