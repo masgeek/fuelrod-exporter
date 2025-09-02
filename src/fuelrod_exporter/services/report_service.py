@@ -8,7 +8,7 @@ from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.repo.report_repo import ReportRepo
 from fuelrod_exporter.schemas.report_filter import ReportFilter
 from fuelrod_exporter.schemas.report_resp import ReportDataRecord, Pagination, ReportResponse
-from fuelrod_exporter.services.minio_service import MinioFileUploader
+from fuelrod_exporter.services.minio_service import MinioService
 import inflect
 
 SERVER_TZ = tz.gettz(Config.SERVER_TZ)  # e.g., "Africa/Nairobi"
@@ -37,7 +37,7 @@ class ReportService:
     ):
         self.repo = ReportRepo()
         self.logger = SharedLogger().get_logger()
-        self.minio = MinioFileUploader()
+        self.minio = MinioService()
 
         # ✅ merge global + instance config
         self.header_overrides = {**HEADER_OVERRIDES, **(header_overrides or {})}
