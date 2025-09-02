@@ -12,6 +12,7 @@ from fuelrod_exporter.schemas.validators import (
     validate_sort_by,
 )
 
+
 def subtract_months(dt: date, months: int) -> date:
     """Subtract months from a date without using dateutil."""
     year = dt.year
@@ -22,14 +23,17 @@ def subtract_months(dt: date, months: int) -> date:
     day = min(dt.day, monthrange(year, month)[1])
     return date(year, month, day)
 
+
 today = date.today()
 first_day = subtract_months(today.replace(day=1), 3)
 last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+
 
 class ReportFilter(ReportFilterBase):
     campaign_id: Optional[conlist(item_type=int)] = Field(
         None, description="One or more campaign IDs", min_length=1, max_length=50
     )
+    delivery_status: Optional[str] = Field(None, description="Delivery status")
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -39,6 +43,7 @@ class ReportFilter(ReportFilterBase):
         json_schema_extra={
             "example": {
                 "api_account_id": 6,
+                "delivery_status": "DELIVERED_TO_HANDSET",
                 "campaign_id": [20200811071956, 20200811071955],
                 "date_range": {"start": first_day.isoformat(), "end": last_day.isoformat()},
                 "sort_by": "created_at",
