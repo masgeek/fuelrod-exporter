@@ -27,11 +27,15 @@ class ReportRepo:
         session = self._get_session()
         query = session.query(SmsReport)
         conditions = [
-            SmsReport.api_account_id == filters.api_account_id
+            SmsReport.api_account_id == filters.api_account_id,
+            SmsReport.message_archived == False,
         ]
 
         if filters.campaign_id:
             conditions.append(SmsReport.campaign_id.in_(filters.campaign_id))
+
+        if filters.delivery_status:
+            conditions.extend([SmsReport.delivery_status == filters.delivery_status])
 
         if filters.date_range:
             start_dt = datetime.combine(filters.date_range.start, time.min)
