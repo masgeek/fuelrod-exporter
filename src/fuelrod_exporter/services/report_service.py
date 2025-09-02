@@ -121,7 +121,8 @@ class ReportService:
         Generates an Excel file with one sheet per campaign.
         Fully streaming: no .count(), no big memory usage.
         """
-        os.makedirs(Config.EXPORT_FOLDER, exist_ok=True)
+        if not os.path.exists(Config.EXPORT_FOLDER):
+            os.makedirs(Config.EXPORT_FOLDER, exist_ok=True)
         file_path = os.path.join(Config.EXPORT_FOLDER, filename)
 
         self.logger.info(f"Starting Excel export: {file_path}")
