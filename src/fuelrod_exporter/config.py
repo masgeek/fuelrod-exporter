@@ -1,8 +1,8 @@
-import logging
 import os
+import re
 
-from apscheduler.schedulers import SchedulerNotRunningError
 from dotenv import load_dotenv
+
 from fuelrod_exporter.core.logging import SharedLogger
 
 load_dotenv(verbose=True)
@@ -20,6 +20,27 @@ if missing:
     message = "Missing required environment variables: " + ", ".join(missing)
     logger.critical(message)
     raise EnvironmentError(message)
+
+
+def parse_interval_to_seconds(interval_str: str) -> int:
+    """
+    Converts interval strings like '30s', '15m', '2h', '1d' into seconds.
+    """
+    match = re.match(r"^(\d+)([smhd])$", interval_str.strip().lower())
+    if not match:
+        raise ValueError(f"Invalid SCHEDULER_INTERVAL format: '{interval_str}'")
+
+    value, unit = match.groups()
+    value = int(value)
+
+    unit_multipliers = {
+        "s": 1,
+        "m": 60,
+        "h": 3600,
+        "d": 86400
+    }
+
+    return value * unit_multipliers[unit]
 
 
 class Config:
@@ -89,7 +110,12 @@ class Config:
 
     REDIS_URL = BROKER_URL
 
-    SCHEDULER_INTERVAL = int(os.getenv("SCHEDULER_INTERVAL", "15"))
+    raw_interval = os.getenv("SCHEDULER_INTERVAL", "24h")
+    try:
+        SCHEDULER_INTERVAL = parse_interval_to_seconds(raw_interval)
+    except ValueError as e:
+        logger.critical(str(e))
+        SCHEDULER_INTERVAL = 3600
 
     SCHEDULER_JOBS = [
         {
