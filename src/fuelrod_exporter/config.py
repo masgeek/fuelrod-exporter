@@ -4,7 +4,7 @@ import re
 from dotenv import load_dotenv
 
 from fuelrod_exporter.core.logging import SharedLogger
-from fuelrod_exporter.utils import parse_interval_to_seconds
+from fuelrod_exporter.utils import parse_interval_to_seconds, parse_env_list
 
 load_dotenv(verbose=True)
 
@@ -59,10 +59,14 @@ class Config:
     MINIO_BUCKET = os.getenv("MINIO_BUCKET", "fuelrod")
     MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
+    # files
+    ALLOWED_EXTENSIONS = parse_env_list( os.getenv("ALLOWED_EXTENSIONS", ".csv,.json,.xlsx,.txt"))
+    PROTECTED_FILES = parse_env_list(os.getenv("PROTECTED_FILES", ".gitignore"))
+
     # Server
     SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
     EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
-    EXPORT_MAX_AGE = int(os.getenv("EXPORT_MAX_AGE", "60"))
+    EXPORT_MAX_AGE = os.getenv("EXPORT_MAX_AGE", "30d")
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
 
     # SchedulerNotRunningError
