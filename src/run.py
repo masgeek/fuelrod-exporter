@@ -18,21 +18,18 @@ Usage:
 
 import os
 from dotenv import load_dotenv
+from fuelrod_exporter.core.auto_reload import watch_env
+from fuelrod_exporter.app import get_app as create_app
 
 load_dotenv()
 
-# Determine debug mode early
-debug = os.getenv("FLASK_DEBUG") == "1"
-
-# Conditionally import watch_env only in development
-from fuelrod_exporter.core.auto_reload import watch_env
-
-from fuelrod_exporter.app import get_app as create_app
+watch_env()
 
 app = create_app()
 app.app_context().push()
 
 if __name__ == "__main__":
+    debug = os.getenv("FLASK_DEBUG") == "1"
     host = os.getenv("SERVER_HOST", default="0.0.0.0")
     port = int(os.getenv("SERVER_PORT", default=3000))
     app.run(host=host, port=port, debug=debug)
