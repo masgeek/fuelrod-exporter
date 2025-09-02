@@ -67,7 +67,7 @@ class Config:
     SERVER_TZ = os.getenv("TIMEZONE", "UTC")
     EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
     EXPORT_MAX_AGE = os.getenv("EXPORT_MAX_AGE", "30d")
-    API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
+    API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{SERVER_PORT}")
 
     # SchedulerNotRunningError
     SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "true").lower() == "true"
