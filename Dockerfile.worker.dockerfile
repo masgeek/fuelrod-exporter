@@ -14,6 +14,7 @@ RUN apt-get update \
         build-essential \
         libpq-dev \
         supervisor \
+        bash \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,40 +25,34 @@ RUN curl -sSL https://install.python-poetry.org | python3 - \
 # Set working directory
 WORKDIR /app
 
-# Copy only dependency files for caching
+# Copy dependency files for caching
 COPY pyproject.toml poetry.lock* README.md /app/
 
 # Configure Poetry and install dependencies (no dev)
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-root --without dev
 
-# Create a non-root user
+# Create non-root user
 RUN useradd -ms /bin/bash fuelrod \
     && chown -R fuelrod:fuelrod /app
 
-# Copy application source and configs
+# Copy app source
 COPY . /app
 
-# Create logs directory (with safer permissions)
-RUN mkdir -p /app/logs \
-    && chown -R fuelrod:fuelrod /app/logs
+# Create logs and exports directories
+RUN mkdir -p /app/logs /app/exports \
+    && chown -R fuelrod:fuelrod /app/logs /app/exports
 
-# Copy supervisord config
-COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copy Supervisor config and start script
+COPY ./supervisor/supervisord.conf /etc/supervisor/supervisord.conf
+COPY ./supervisor/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Declare volumes
+VOLUME ["/app/logs", "/app/exports"]
 
 # Switch to non-root user
-#USER fuelrod
+USER fuelrod
 
-# Expose logs to Docker stdout/stderr (optional)
-VOLUME ["/app/logs"]
-
-#WORKDIR /app/src
-# Start supervisord to manage the Dramatiq worker
-#CMD ["/usr/bin/supervisord", "-n","-c", "/etc/supervisor/conf.d/supervisord.conf"]
-CMD ["/usr/bin/supervisord","-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-# Entry: run Dramatiq and then keep container alive
-#CMD bash -c "\
-#    dramatiq fuelrod_exporter.tasks --processes 2 --threads 4; \
-#    echo 'Dramatiq exited, keeping container alive for debug'; \
-#    while true; do sleep 60; done"
+# Start services via Supervisor (includes Dramatiq)
+CMD ["/usr/local/bin/start.sh"]
