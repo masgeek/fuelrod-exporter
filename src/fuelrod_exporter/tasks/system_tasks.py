@@ -6,7 +6,7 @@ from fuelrod_exporter.core.database import MyDb
 
 app = get_app()
 
-@dramatiq.actor(store_results=True)
+@dramatiq.actor(store_results=False)
 def health_check_task():
     """
     Lightweight end-to-end healthcheck.
@@ -19,7 +19,7 @@ def health_check_task():
     }
 
 
-@dramatiq.actor(store_results=True)
+@dramatiq.actor(store_results=False)
 def test_database_task():
     """
     Test database connectivity from within a Dramatiq task.
