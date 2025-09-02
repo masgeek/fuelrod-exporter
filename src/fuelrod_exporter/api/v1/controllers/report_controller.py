@@ -70,9 +70,7 @@ class ReportsController:
 
                 # Queue the task
                 payload = serialize_dates(body.model_dump())
-                self.logger.debug(
-                    f"Queuing export task for {payload} with filename {filename}"
-                )
+                self.logger.info(f"Queuing export task for {payload} with filename {filename}")
                 generate_excel_task.send(payload, filename)
 
                 return {"download_url": download_url}
