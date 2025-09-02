@@ -60,7 +60,7 @@ class Config:
     MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
     # files
-    ALLOWED_EXTENSIONS = parse_env_list( os.getenv("ALLOWED_EXTENSIONS", ".csv,.json,.xlsx,.txt"))
+    ALLOWED_EXTENSIONS = parse_env_list(os.getenv("ALLOWED_EXTENSIONS", ".csv,.json,.xlsx,.txt"))
     PROTECTED_FILES = parse_env_list(os.getenv("PROTECTED_FILES", ".gitignore"))
 
     # Server
@@ -70,6 +70,7 @@ class Config:
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
 
     # SchedulerNotRunningError
+    SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "true").lower() == "true"
     SCHEDULER_API_ENABLED = os.getenv("SCHEDULER_API_ENABLED", "false").lower() == "true"
 
     # Redis / Celery
