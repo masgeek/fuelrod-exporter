@@ -2,33 +2,46 @@ import re
 
 
 def format_size(bytes_size: int) -> str:
-    if bytes_size < 1024:
-        return f"{bytes_size} B"
-    elif bytes_size < 1024 ** 2:
-        return f"{bytes_size / 1024:.1f} KB"
-    elif bytes_size < 1024 ** 3:
-        return f"{bytes_size / (1024 ** 2):.1f} MB"
-    else:
-        return f"{bytes_size / (1024 ** 3):.2f} GB"
+    """Format byte size into human-readable units, defaulting to KB."""
+    if bytes_size <= 0:
+        return "0.0 KB"
+
+    units = ["KB", "MB", "GB", "TB", "PB"]
+    size = bytes_size / 1024  # Start from KB
+
+    for unit in units:
+        if size < 1024:
+            precision = 1 if unit in ["KB", "MB"] else 2
+            return f"{size:.{precision}f} {unit}"
+        size /= 1024
+
+    # Fallback in case size exceeds all units
+    return f"{size:.2f} PB"
+
 
 def format_age(seconds: int) -> str:
-    """Format age in human-readable form."""
-    if seconds < 60:
-        return f"{seconds} sec"
-    minutes = seconds // 60
-    if minutes < 60:
-        return f"{minutes} min"
-    hours = minutes // 60
-    if hours < 24:
-        return f"{hours} h"
-    days = hours // 24
-    if days < 30:
-        return f"{days} d"
-    months = days // 30
-    if months < 12:
-        return f"{months} mo"
-    years = months // 12
-    return f"{years} y"
+    """Format duration in human-readable form, starting from seconds."""
+    if seconds <= 0:
+        return "0 sec"
+
+    units = [
+        ("sec", 60),
+        ("min", 60),
+        ("h", 24),
+        ("d", 30),
+        ("mo", 12),
+        ("y", float("inf")),
+    ]
+
+    value = seconds
+    for unit, threshold in units:
+        if value < threshold:
+            return f"{int(value)} {unit}"
+        value /= threshold
+
+    # Fallback (should never hit this)
+    return f"{int(value)} y"
+
 
 def parse_interval_to_seconds(interval_str: str) -> int:
     """
@@ -49,3 +62,18 @@ def parse_interval_to_seconds(interval_str: str) -> int:
     }
 
     return value * unit_multipliers[unit]
+
+
+import re
+
+def parse_env_list(raw_list: str) -> set[str]:
+    """
+    Parses an environment variable string into a set of lowercase items,
+    splitting by comma, space, semicolon, or colon.
+    """
+    if not raw_list:
+        return set()
+
+    # Split by any of: comma, space, semicolon, colon
+    items = re.split(r"[,\s;:]+", raw_list.strip())
+    return {item.lower() for item in items if item}
