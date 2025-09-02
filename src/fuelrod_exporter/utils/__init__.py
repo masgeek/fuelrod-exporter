@@ -45,9 +45,9 @@ def format_age(seconds: int) -> str:
 
 def parse_interval_to_seconds(interval_str: str) -> int:
     """
-    Converts interval strings like '30s', '15m', '2h', '1d' into seconds.
+    Converts interval strings like '30s', '15m', '2h', '1d', '1y' into seconds.
     """
-    match = re.match(r"^(\d+)([smhd])$", interval_str.strip().lower())
+    match = re.match(r"^(\d+)([smhdy])$", interval_str.strip().lower())
     if not match:
         raise ValueError(f"Invalid SCHEDULER_INTERVAL format: '{interval_str}'")
 
@@ -55,11 +55,13 @@ def parse_interval_to_seconds(interval_str: str) -> int:
     value = int(value)
 
     unit_multipliers = {
-        "s": 1,
-        "m": 60,
-        "h": 3600,
-        "d": 86400
+        "s": 1,            # seconds
+        "m": 60,           # minutes
+        "h": 3600,         # hours
+        "d": 86400,        # days
+        "y": 31536000      # years (365 days)
     }
+
 
     return value * unit_multipliers[unit]
 
