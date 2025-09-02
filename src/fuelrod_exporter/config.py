@@ -89,12 +89,14 @@ class Config:
 
     REDIS_URL = BROKER_URL
 
+    SCHEDULER_INTERVAL = int(os.getenv("SCHEDULER_INTERVAL", "15"))
+
     SCHEDULER_JOBS = [
         {
             "id": "cleanup_exports",
             "func": "fuelrod_exporter.tasks.cleanup:trigger_cleanup",
             "trigger": "interval",
-            "seconds": 15,
+            "seconds": SCHEDULER_INTERVAL,
             "replace_existing": True
         }
     ]
