@@ -7,11 +7,14 @@ from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.logging import SharedLogger
 from fuelrod_exporter.utils import format_size
 from fuelrod_exporter.services.minio_service import MinioFileUploader
+from fuelrod_exporter.worker_app import get_app
 
 logger = SharedLogger().get_logger()
 minio = MinioFileUploader()
 
 PROTECTED_FILES = {".gitignore"}
+
+app = get_app()
 
 
 @dramatiq.actor(store_results=True)
@@ -56,8 +59,9 @@ def cleanup_export_folder(directory: str, max_age_minutes: int = 60):
 
 
 def trigger_cleanup():
-    folder = Config.EXPORT_FOLDER
-    max_age = Config.EXPORT_MAX_AGE
+    with app.app_context():
+        folder = Config.EXPORT_FOLDER
+        max_age = Config.EXPORT_MAX_AGE
 
-    logger.info(f"Scheduler triggered cleanup task for folder: {folder} (max age: {max_age} mins)")
-    cleanup_export_folder.send(folder, max_age)
+        logger.info(f"Scheduler triggered cleanup task for folder: {folder} (max age: {max_age} mins)")
+        cleanup_export_folder.send(folder, max_age)
