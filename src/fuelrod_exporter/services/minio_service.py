@@ -1,6 +1,8 @@
 import os
 import mimetypes
 import json
+from datetime import datetime
+from dateutil import tz
 from io import BytesIO
 from typing import Optional
 
@@ -10,7 +12,14 @@ from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.logging import SharedLogger
 
 
-class MinioFileUploader:
+class MinioObject:
+    def __init__(self, object_name: str, size: int, last_modified: datetime):
+        self.object_name = object_name
+        self.size = size
+        self.last_modified = last_modified
+
+
+class MinioService:
     """Minimal service for uploading files to MinIO (bucket is public-read)."""
     _instance = None
 
@@ -133,7 +142,24 @@ class MinioFileUploader:
             self.logger.error(f"Upload failed for '{object_name}': {e}")
             raise
 
+    # noinspection PyMethodMayBeStatic
     def get_public_url(self, object_name: str) -> str:
         """Generate the full public URL for an object."""
         protocol = "https" if Config.MINIO_SECURE else "http"
         return f"{protocol}://{Config.MINIO_ENDPOINT}/{Config.MINIO_BUCKET}/{object_name}"
+
+    def list_objects(self) -> list[MinioObject]:
+        client = self.connect()
+        try:
+            objects = client.list_objects(Config.MINIO_BUCKET, recursive=True)
+            result = []
+            for obj in objects:
+                result.append(MinioObject(
+                    object_name=obj.object_name,
+                    size=obj.size,
+                    last_modified=obj.last_modified,
+                ))
+            return result
+        except S3Error as e:
+            self.logger.error(f"MinIO list_objects failed: {e}")
+            return []
