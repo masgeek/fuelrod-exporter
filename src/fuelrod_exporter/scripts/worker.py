@@ -13,7 +13,6 @@ def handle_signal(signum, frame):
 
 def main():
     signal.signal(signal.SIGINT, handle_signal)
-    signal.signal(signal.SIGTERM, handle_signal)
 
     logger.info("🚀 Starting Dramatiq worker: fuelrod_exporter.tasks")
     try:
