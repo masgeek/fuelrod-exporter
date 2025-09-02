@@ -18,7 +18,6 @@ services:
     ports:
       - "3000:3000"  # expose API
     volumes:
-#      - .:/app
       - ./logs:/app/logs
 
     environment:
@@ -39,7 +38,7 @@ services:
       dockerfile: Dockerfile.worker.dockerfile
     image: masgeek/fuelrod-exporter-worker:${TAG:-latest}
     volumes:
-      - .:/app
+      - ./logs:/app/logs
     environment:
       CONFIG_ENV: ${CONFIG_ENV:-prod}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
