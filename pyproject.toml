@@ -28,6 +28,7 @@ dependencies = [
     "uvicorn (>=0.35.0,<0.36.0)",
     "minio (>=7.2.16,<8.0.0)",
     "flask-apscheduler (>=1.13.1,<2.0.0)",
+    "inflect (>=7.5.0,<8.0.0)",
 ]
 
 [tool.poetry]
@@ -49,5 +50,7 @@ lint = "pylint.__main__:run"
 models = "fuelrod_exporter.model_gen:main"
 test = "fuelrod_exporter.main:main"
 scheduler = "fuelrod_exporter.run_scheduler:main"
-queue="dramatiq fuelrod_exporter.tasks --processes 1 --threads 1"
+#dramatiq fuelrod_exporter.tasks --processes 3 --threads 6
+worker = "fuelrod_exporter.scripts.worker:main"
+
 
