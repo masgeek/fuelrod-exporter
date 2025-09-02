@@ -64,7 +64,7 @@ class Config:
     PROTECTED_FILES = parse_env_list(os.getenv("PROTECTED_FILES", ".gitignore"))
 
     # Server
-    SERVER_TZ = os.getenv("TIMEZONE", "Africa/Nairobi")
+    SERVER_TZ = os.getenv("TIMEZONE", "UTC")
     EXPORT_FOLDER = os.getenv("EXPORT_FOLDER", "exports")
     EXPORT_MAX_AGE = os.getenv("EXPORT_MAX_AGE", "30d")
     API_BASE_URL = os.getenv("API_BASE_URL", f"http://localhost:{os.getenv('SERVER_PORT', 3000)}")
