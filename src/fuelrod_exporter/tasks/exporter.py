@@ -9,8 +9,6 @@ from fuelrod_exporter.core.logging import SharedLogger
 logger = SharedLogger().get_logger()
 app = get_app()
 
-
-# time limit is in seconds
 @dramatiq.actor(store_results=True)
 def generate_excel_task(payload: dict, filename: str):
     with app.app_context():
