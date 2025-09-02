@@ -46,10 +46,17 @@ RUN mkdir -p /app/logs \
 COPY supervisord_worker.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Switch to non-root user
-USER fuelrod
+#USER fuelrod
 
 # Expose logs to Docker stdout/stderr (optional)
 VOLUME ["/app/logs"]
 
 # Start supervisord to manage the Dramatiq worker
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+WORKDIR /app/src
+# Entry: run Dramatiq and then keep container alive
+CMD bash -c "\
+    dramatiq fuelrod_exporter.tasks --processes 2 --threads 4; \
+    echo 'Dramatiq exited, keeping container alive for debug'; \
+    while true; do sleep 60; done"
