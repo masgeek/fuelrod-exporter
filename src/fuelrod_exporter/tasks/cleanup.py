@@ -5,14 +5,12 @@ import dramatiq
 
 from fuelrod_exporter.config import Config
 from fuelrod_exporter.core.logging import SharedLogger
-from fuelrod_exporter.utils import format_size, format_age
+from fuelrod_exporter.utils import format_size, format_age, parse_interval_to_seconds
 from fuelrod_exporter.services.minio_service import MinioFileUploader
 from fuelrod_exporter.worker_app import get_app
 
 logger = SharedLogger().get_logger()
 minio = MinioFileUploader()
-
-PROTECTED_FILES = {".gitignore"}
 
 app = get_app()
 
@@ -33,14 +31,20 @@ def cleanup_export_folder(directory: str, max_age_seconds: int = 3600):
     logger.info("-" * 100)
 
     for file in path.iterdir():
+        if not file.is_file():
+            continue
+
+        if file.suffix.lower() not in Config.ALLOWED_EXTENSIONS:
+            continue  # skip unsupported file types
+
         modified = datetime.fromtimestamp(file.stat().st_mtime)
         age_seconds = int((now - modified).total_seconds())
         size = format_size(file.stat().st_size)
         status = ""
 
-        if file.name in PROTECTED_FILES:
+        if file.name in Config.PROTECTED_FILES:
             status = "🔒 Skipped (protected)"
-        elif file.is_file() and modified < cutoff:
+        elif modified < cutoff:
             try:
                 file.unlink()
                 minio.remove_object(file.name)
@@ -62,7 +66,8 @@ def cleanup_export_folder(directory: str, max_age_seconds: int = 3600):
 def trigger_cleanup():
     with app.app_context():
         folder = Config.EXPORT_FOLDER
-        max_age = Config.EXPORT_MAX_AGE
+        max_age = parse_interval_to_seconds(Config.EXPORT_MAX_AGE)
+        max_age_str = format_age(max_age)
 
-        logger.info(f"Scheduler triggered cleanup task for folder: {folder} (max age: {max_age} mins)")
+        logger.info(f"Scheduler triggered cleanup task for folder: {folder} (max age: {max_age_str})")
         cleanup_export_folder.send(folder, max_age)
