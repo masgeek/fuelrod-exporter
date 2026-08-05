@@ -1,5 +1,5 @@
 # Use an official Python base image (adjust to match your Python requirement)
-FROM python:3.13.7-slim
+FROM python:3.14.7-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
